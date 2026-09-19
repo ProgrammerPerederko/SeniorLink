@@ -1,0 +1,1 @@
+{"expo":{"name":"SeniorLink","slug":"seniorlink","version":"1.0.0","orientation":"portrait","userInterfaceStyle":"light","scheme":"seniorlink","plugins":["expo-router"],"experiments":{"typedRoutes":true},"android":{"package":"com.programmerperederko.seniorlink"},"ios":{"bundleIdentifier":"com.programmerperederko.seniorlink"}}}
