@@ -38,21 +38,18 @@ class Onboarding4Activity : AppCompatActivity() {
 
         findViewById<ImageButton>(R.id.btnAvancar)
             .setOnClickListener {
-                abrirTelaPrincipal()
+                abrirLogin()
             }
 
         findViewById<TextView>(R.id.txtPular)
             .setOnClickListener {
-                abrirTelaPrincipal()
+                abrirLogin()
             }
     }
 
-    private fun abrirTelaPrincipal() {
+    private fun abrirLogin() {
         val intent = Intent(this, MainActivity::class.java)
-
-        // Informa que deve abrir diretamente a Home
-        intent.putExtra("abrir_inicio", true)
-
+        intent.putExtra("abrir_login", true)
         startActivity(intent)
         finish()
     }
