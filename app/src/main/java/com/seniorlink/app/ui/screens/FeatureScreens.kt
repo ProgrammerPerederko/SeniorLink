@@ -115,7 +115,7 @@ fun LocalizacaoScreen(onVoltar: () -> Unit) {
 }
 
 @Composable
-fun LembretesScreen(onVoltar: () -> Unit) {
+fun LembretesScreen(onVoltar: () -> Unit, onNovoLembrete: () -> Unit = {}) {
     var titulo by remember { mutableStateOf("") }
     var horario by remember { mutableStateOf("") }
     var lembretes by remember {
@@ -133,6 +133,13 @@ fun LembretesScreen(onVoltar: () -> Unit) {
         TituloTela("Lembretes")
 
         Text("Organize suas atividades do dia a dia.")
+
+        OutlinedButton(
+            onClick = onNovoLembrete,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("＋ Adicionar lembrete")
+        }
 
         OutlinedTextField(
             value = titulo,
