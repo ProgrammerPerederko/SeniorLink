@@ -11,13 +11,13 @@
 
 ## Fase 1 — Interfaces completas
 
-- [ ] Login
-- [ ] Cadastro
-- [ ] Boas-vindas
-- [ ] Adicionar lembrete
-- [ ] Contatos
-- [ ] Configurações
-- [ ] Treinamento do responsável
+- [x] Login (interface)
+- [x] Cadastro (interface)
+- [x] Boas-vindas (interface)
+- [x] Adicionar lembrete (interface)
+- [x] Contatos (interface)
+- [x] Configurações (interface)
+- [x] Treinamento do responsável (interface)
 - [ ] Revisão visual de todas as 16 telas
 
 ## Fase 2 — Funcionalidades locais
