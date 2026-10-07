@@ -36,7 +36,7 @@ class SplashActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.txtPular)
             .setOnClickListener {
-                abrirInicio()
+                abrirLogin()
             }
     }
 
@@ -47,9 +47,9 @@ class SplashActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun abrirInicio() {
+    private fun abrirLogin() {
         val intent = Intent(this, MainActivity::class.java)
-        intent.putExtra("abrir_inicio", true)
+        intent.putExtra("abrir_login", true)
         startActivity(intent)
         finish()
     }
