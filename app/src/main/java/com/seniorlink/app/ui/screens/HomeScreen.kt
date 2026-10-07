@@ -192,6 +192,13 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
+            TextButton(
+                onClick = { onNavigate("configuracoes") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("⚙ Configurações", color = Azul)
+            }
+
             // Espaço para conteúdos futuros
             Text(
                 text = "Cuidado, autonomia e conexão",
