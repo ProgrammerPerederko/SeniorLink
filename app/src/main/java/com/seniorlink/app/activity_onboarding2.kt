@@ -75,19 +75,13 @@ class activity_onboarding2 : AppCompatActivity() {
 
         // Pular direto para a tela principal
         txtPular.setOnClickListener {
-            abrirTelaPrincipal()
+            abrirLogin()
         }
     }
 
-    private fun abrirTelaPrincipal() {
-
-        val intent = Intent(
-            this,
-            MainActivity::class.java
-        )
-
-        intent.putExtra("abrir_inicio", true)
-
+    private fun abrirLogin() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra("abrir_login", true)
         startActivity(intent)
         finish()
     }
