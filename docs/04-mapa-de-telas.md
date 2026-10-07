@@ -44,18 +44,18 @@
 | 2 | Onboarding 1 | existente | parcial |
 | 3 | Onboarding 2 | existente | parcial |
 | 4 | Onboarding 3 | existente | parcial |
-| 5 | Login | a criar/consolidar | pendente |
-| 6 | Cadastro | a criar/consolidar | pendente |
+| 5 | Login | existente | interface pronta |
+| 6 | Cadastro | existente | interface pronta |
 | 7 | Tela Inicial | existente | navegação básica |
 | 8 | Perfil | existente | protótipo |
 | 9 | Localização | existente | protótipo |
 | 10 | Lembretes | existente | protótipo |
-| 11 | Adicionar Lembrete | pendente | pendente |
+| 11 | Adicionar Lembrete | existente | interface pronta |
 | 12 | Emergência | existente | protótipo |
 | 13 | Aprender | existente | interface básica |
-| 14 | Contatos | pendente | pendente |
-| 15 | Configurações | pendente | pendente |
-| 16 | Boas-vindas | pendente | pendente |
+| 14 | Contatos | existente | interface pronta |
+| 15 | Configurações | existente | interface pronta |
+| 16 | Boas-vindas | existente | interface pronta |
 
 ## Critério de conclusão de uma tela
 
