@@ -106,7 +106,8 @@ fun SeniorLinkApp(
         )
 
         "lembretes" -> LembretesScreen(
-            onVoltar = { telaAtual = "inicio" }
+            onVoltar = { telaAtual = "inicio" },
+            onNovoLembrete = { telaAtual = "novo_lembrete" }
         )
 
         "novo_lembrete" -> NovoLembreteScreen(
