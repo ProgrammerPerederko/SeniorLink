@@ -25,6 +25,12 @@
 
         </activity>
 
+        <!-- Novo onboarding com deslize -->
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Tela principal -->
         <activity
             android:name=".MainActivity"
@@ -33,19 +39,19 @@
             android:theme="@style/Theme.SeniorLink"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Onboarding 2 -->
+        <!-- Onboarding antigo 2 -->
         <activity
             android:name=".activity_onboarding2"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Onboarding 3 -->
+        <!-- Onboarding antigo 3 -->
         <activity
             android:name=".Onboarding3Activity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Onboarding 4 -->
+        <!-- Onboarding antigo 4 -->
         <activity
             android:name=".Onboarding4Activity"
             android:exported="false"
