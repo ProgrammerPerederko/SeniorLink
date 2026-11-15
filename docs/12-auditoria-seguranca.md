@@ -79,9 +79,9 @@ O SeniorLink não deve ser considerado pronto para produção enquanto:
 
 Implementar, testar e versionar a camada de autorização:
 
-`@text
+```text
 Responsável → Idoso
 Cuidador → Idoso
-`@
+```
 
 usando `auth.uid` como identidade.
