@@ -1,29 +1,28 @@
-`# SeniorLink
+# SeniorLink
 
 Aplicativo Android voltado à segurança, autonomia e inclusão digital da pessoa idosa.
 
 ## Objetivo
 
-O SeniorLink combina localização, ficha de informações importantes, lembretes, emergência, ligações rápidas e treinamento para o idoso e para o responsável.
+O SeniorLink combina localização, ficha de informações importantes, lembretes, emergência, ligações rápidas e treinamento para o idoso, responsável e cuidador.
 
-## Estado atual
+## Estado técnico atual
 
-A base atual utiliza:
+A aplicação utiliza Kotlin + Jetpack Compose, Firebase Authentication, Firebase Realtime Database, Fused Location Provider e Google Maps Compose.
 
-- Kotlin + Jetpack Compose;
-- Firebase Authentication;
-- Firebase Realtime Database;
-- Fused Location Provider;
-- Google Maps Compose;
-- alarmes e notificações do Android.
+O fluxo principal é controlado por `MainActivity` e `SplashScreen`. O projeto ainda contém algumas Activities/XML antigos de onboarding que não são usados pelo launcher atual; eles são mantidos como legado até uma limpeza dedicada.
 
-Existem fluxos distintos para:
+### Perfis atuais
 
-- Idoso;
-- Responsável;
-- Cuidador.
+- Idoso
+- Responsável
+- Cuidador
 
-A documentação do projeto fica em `docs/` e deve refletir o comportamento real do código.
+### Backend atual
+
+O banco operacional é **Firebase Realtime Database**.
+
+O Firebase Cloud Firestore não participa mais do código atual e foi removido das dependências do aplicativo.
 
 ## Documentação
 
@@ -37,26 +36,21 @@ A documentação do projeto fica em `docs/` e deve refletir o comportamento real
 - [Decisões técnicas](docs/08-decisoes-tecnicas.md)
 - [Diário de desenvolvimento](docs/09-diario-de-desenvolvimento.md)
 - [Backlog atual](docs/10-backlog-atual.md)
-- [Modelo do Firebase](docs/11-modelo-firebase.md)
+- [Entrega de interfaces — 07/10/2026](docs/11-entrega-interfaces-2026-10-07.md)
+- [Modelo do Firebase](docs/13-modelo-firebase.md)
 - [Auditoria de segurança](docs/12-auditoria-seguranca.md)
+- [Guia de commits e colaboração](docs/14-guia-commits.md)
 
-## Firebase e segredos
+## Configuração local
 
-O aplicativo precisa do arquivo:
+O projeto precisa de:
 
-```text
-app/google-services.json
-```
+- JDK 17;
+- Android Studio compatível com compileSdk 37;
+- `app/google-services.json` do projeto Firebase;
+- `secrets.properties` local com a chave real do Maps.
 
-Esse arquivo deve corresponder ao projeto Firebase usado pelo SeniorLink.
-
-A chave real do Google Maps deve ficar somente em:
-
-```text
-secrets.properties
-```
-
-Esse arquivo não deve ser versionado.
+`secrets.properties` não deve ser versionado.
 
 O arquivo versionado `local.defaults.properties` contém somente:
 
@@ -64,59 +58,31 @@ O arquivo versionado `local.defaults.properties` contém somente:
 MAPS_API_KEY=DEFAULT_API_KEY
 ```
 
-Uma chave real do Maps foi encontrada anteriormente no histórico do Git e deve ser considerada exposta. Ela precisa ser revogada/rotacionada no Google Cloud. Remover o valor do arquivo atual não elimina a exposição do histórico.
+Uma chave real do Maps apareceu anteriormente no histórico do Git e deve ser considerada exposta. Ela precisa ser revogada/rotacionada no Google Cloud.
 
-## Estrutura principal do código
+## Estrutura principal
 
 ```text
 app/src/main/java/com/seniorlink/app/
+├── MainActivity.kt
 ├── auth/
-│   ├── AuthRepository.kt
-│   └── AuthViewModel.kt
 ├── data/
-│   └── FirestoreRepository.kt
 ├── location/
-│   └── LocationRepository.kt
 ├── alarm/
 ├── services/
 ├── model/
 └── ui/
-    ├── screens/
-    └── theme/
 ```
 
-> `FirestoreRepository.kt` usa Realtime Database apesar do nome histórico. A renomeação é uma melhoria técnica pendente.
-
-## Configuração local
-
-Use JDK 17.
-
-O projeto define:
-
-- minSdk 24;
-- compileSdk 37;
-- targetSdk 37;
-- Java/JVM 17.
-
-No Android Studio:
-
-1. abra a pasta raiz do projeto;
-2. aguarde a sincronização do Gradle;
-3. confirme que `app/google-services.json` existe;
-4. mantenha a chave real do Maps em `secrets.properties`;
-5. execute o app em um dispositivo ou emulador com localização habilitada.
+> `data/FirestoreRepository.kt` possui nome histórico, mas usa Firebase Realtime Database. A nomenclatura será corrigida em uma mudança dedicada para evitar alterações desnecessárias nesta revisão.
 
 ## Regra de trabalho
 
-Toda nova funcionalidade deve passar pelo ciclo:
+Toda alteração deve seguir:
 
-`Entender problema → documentar decisão → implementar → testar → atualizar documentação → registrar mudança`.
+`entender → implementar → testar → documentar → commit → pull request`.
 
-## Segurança
-
-A documentação de segurança e as pendências estão em [12 — Auditoria de segurança](docs/12-auditoria-seguranca.md).
-
-Antes de alterar autenticação, localização, banco, permissões ou dados pessoais, consulte também o [Modelo do Firebase](docs/11-modelo-firebase.md).
+Veja o [Guia de commits e colaboração](docs/14-guia-commits.md) antes de criar commits.
 
 ## Repositório
 
