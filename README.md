@@ -44,31 +44,31 @@ A documentação do projeto fica em `docs/` e deve refletir o comportamento real
 
 O aplicativo precisa do arquivo:
 
-`@text
+```text
 app/google-services.json
-`@
+```
 
 Esse arquivo deve corresponder ao projeto Firebase usado pelo SeniorLink.
 
 A chave real do Google Maps deve ficar somente em:
 
-`@text
+```text
 secrets.properties
-`@
+```
 
 Esse arquivo não deve ser versionado.
 
 O arquivo versionado `local.defaults.properties` contém somente:
 
-`@properties
+```properties
 MAPS_API_KEY=DEFAULT_API_KEY
-`@
+```
 
 Uma chave real do Maps foi encontrada anteriormente no histórico do Git e deve ser considerada exposta. Ela precisa ser revogada/rotacionada no Google Cloud. Remover o valor do arquivo atual não elimina a exposição do histórico.
 
 ## Estrutura principal do código
 
-`@text
+```text
 app/src/main/java/com/seniorlink/app/
 ├── auth/
 │   ├── AuthRepository.kt
@@ -83,7 +83,7 @@ app/src/main/java/com/seniorlink/app/
 └── ui/
     ├── screens/
     └── theme/
-`@
+```
 
 > `FirestoreRepository.kt` usa Realtime Database apesar do nome histórico. A renomeação é uma melhoria técnica pendente.
 
