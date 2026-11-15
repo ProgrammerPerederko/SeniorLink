@@ -1,80 +1,142 @@
 # 07 — Plano de testes
 
-## Teste de abertura
+## 1. Build
 
-**Objetivo:** garantir que o aplicativo inicia sem crash.
+Na raiz do projeto:
 
-Passos:
-1. Instalar APK.
-2. Abrir SeniorLink.
-3. Avançar no onboarding.
-4. Chegar à Home.
+```powershell
+.\gradlew.bat assembleDebug
+```
 
-Resultado esperado: nenhuma Activity fecha inesperadamente.
+Resultado esperado: APK de debug gerado sem erro de compilação.
 
-## Teste de navegação
+## 2. Testes unitários
+
+```powershell
+.\gradlew.bat test
+```
+
+Executar quando houver alteração em regras de negócio, modelos ou repositórios.
+
+## 3. Testes instrumentados
+
+Quando houver dispositivo/emulador:
+
+```powershell
+.\gradlew.bat connectedAndroidTest
+```
+
+## 4. Inicialização
 
 Validar:
 
-- Home → Perfil
-- Home → Localização
-- Home → Lembretes
-- Home → Aprender
-- Home → Emergência
-- retorno para Home
+1. abrir o app;
+2. navegar pelo onboarding;
+3. entrar no login;
+4. abrir a Home;
+5. voltar e avançar entre telas.
 
-## Teste de perfil
+Resultado esperado: nenhum crash.
+
+## 5. Autenticação
 
 Validar:
 
-- inserir dados;
-- salvar;
-- fechar tela;
-- abrir novamente;
-- verificar persistência.
+- cadastro do responsável;
+- login;
+- recuperação de senha;
+- login com Google;
+- logout;
+- cadastro/login do cuidador;
+- fluxo legado por PIN do idoso.
 
-## Teste de localização
+## 6. Perfil
+
+Validar:
+
+- leitura;
+- alteração;
+- salvamento;
+- fechamento;
+- reabertura;
+- persistência após reiniciar o app.
+
+## 7. Localização
 
 Validar:
 
 - permissão concedida;
 - permissão negada;
-- GPS desligado;
-- GPS ligado;
-- leitura de posição;
-- compartilhamento.
+- GPS indisponível;
+- GPS disponível;
+- escrita em `localizacoes/{id}`;
+- leitura pelo responsável;
+- atualização do mapa;
+- encerramento do rastreamento.
 
-## Teste de lembretes
+## 8. Lembretes
 
 Validar:
 
 - criação;
-- edição;
-- exclusão;
-- ativação/desativação;
-- notificação;
-- repetição diária.
+- persistência;
+- agendamento;
+- abertura na tela bloqueada;
+- concluir;
+- adiar cinco minutos;
+- excluir;
+- reiniciar o aplicativo.
 
-## Teste de emergência
+Também verificar se o lembrete concluído foi alterado no `idosoId` correto.
+
+## 9. Emergência
 
 Validar:
 
-- sem contato;
-- com contato;
 - confirmação;
-- abertura do discador;
-- compartilhamento de localização.
+- gravação do alerta;
+- localização;
+- painel do responsável;
+- alerta em segundo plano;
+- parada do alarme;
+- encerramento do estado.
 
-## Teste de acessibilidade
+## 10. Contatos
 
 Validar:
 
-- fonte maior;
-- contraste;
-- áreas de toque;
-- leitura de rótulos;
-- compreensão da navegação.
+- criar;
+- listar;
+- ligar;
+- excluir;
+- estado vazio.
 
-## Critério de aceite do MVP
+## 11. Acessibilidade
 
-Uma funcionalidade é considerada pronta quando passa no caminho feliz e nos principais caminhos de erro, sem crash, e o resultado é documentado.
+Validar:
+
+- fonte normal;
+- fonte grande;
+- fonte extra;
+- alto contraste;
+- tamanhos de toque;
+- leitura de textos críticos.
+
+## 12. Segurança
+
+Usar duas contas diferentes:
+
+- responsável A não pode acessar dados do idoso B;
+- cuidador A não pode acessar dados fora do vínculo;
+- alterar manualmente um `idosoId` não deve liberar dados;
+- usuário deslogado não deve gravar dados protegidos.
+
+## 13. Critério de aceite
+
+Uma funcionalidade só é considerada pronta quando:
+
+- caminho feliz passa;
+- principais erros passam;
+- não há crash;
+- documentação foi atualizada;
+- teste executado está registrado no PR.
