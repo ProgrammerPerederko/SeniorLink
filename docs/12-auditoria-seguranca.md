@@ -1,87 +1,94 @@
-`# 12 — Auditoria de segurança
+# 12 — Auditoria de segurança
 
 > Revisão do código e da configuração versionada em 15/11/2026.
 
 ## Resultado
 
-O projeto possui uma camada funcional de Firebase, mas ainda não deve ser considerado pronto para produção.
+O SeniorLink possui uma camada funcional de Authentication, Realtime Database, localização, lembretes e emergência, mas ainda não deve ser considerado pronto para produção.
 
-Esta revisão concentra-se em correções que podem ser aplicadas no aplicativo sem assumir que as Security Rules do console já estejam corretas.
+Esta auditoria registra tanto correções já aplicadas quanto riscos que dependem do backend Firebase.
 
 ## Correções aplicadas
 
 ### Segredos
 
-- `local.defaults.properties` não contém mais uma chave real do Maps.
-- `secrets.properties` continua sendo arquivo local.
-- `.gitignore` foi reforçado para credenciais e certificados.
-- A chave que já apareceu no histórico continua sendo tratada como exposta e precisa ser rotacionada/revogada.
+- `local.defaults.properties` não contém mais uma chave real do Maps;
+- `secrets.properties` permanece local;
+- `.gitignore` cobre credenciais e certificados;
+- a chave que já apareceu no histórico continua considerada exposta.
+
+### Perfil e banco
+
+- perfil do Idoso alinhado ao Realtime Database;
+- dependência do Cloud Firestore removida;
+- persistência remota usa `usuarios/{idosoId}`;
+- preferências locais são persistidas em SharedPreferences.
 
 ### PIN
 
-- o PIN deixou de ser salvo em `SharedPreferences`;
-- o fluxo atual ainda mantém o PIN no Realtime Database para compatibilidade;
-- o login do Idoso continua consultando o PIN diretamente no banco;
-- essa estratégia é temporária e não pode ser usada como autenticação de produção.
-
-### Identidade e repositório
-
-- operações do repositório que dependem de usuário autenticado não usam mais o pseudo-UID `__unauthenticated__`;
-- consultas de idosos do responsável são filtradas pelo e-mail da sessão autenticada;
-- operações de atualização de ficha verificam a existência de sessão.
-
-Essas validações melhoram o comportamento do cliente, mas **não substituem Security Rules**.
+- o PIN não é salvo em SharedPreferences;
+- o PIN ainda existe no Realtime Database;
+- o login do Idoso ainda consulta esse PIN;
+- essa estratégia é temporária e não representa autenticação de produção.
 
 ### Localização
 
-- em produção, a localização utiliza `localizacoes/{auth.uid}`;
-- em debug, o fluxo atual por PIN pode usar `id_idoso` local para testar `localizacoes/{id}`;
+- produção usa `localizacoes/{auth.uid}` quando há Authentication;
+- debug pode usar `id_idoso` local;
 - `idoso_teste` permanece somente como fallback de debug;
-- gravação diagnóstica ocorre somente em debug;
-- logs detalhados de coordenadas ficam limitados ao debug;
-- o painel do responsável agora lê o mesmo caminho que o produtor utiliza.
+- Home e tela de localização utilizam o mesmo repositório;
+- logs de coordenadas detalhados ficam restritos ao debug.
 
-### Emergência
+### Lembretes
 
-- a localização da emergência usa o nó padronizado `localizacoes/{idosoId}`;
-- o estado do alerta continua disponível em `emergencias/{idosoId}`;
-- o espelho `usuarios/{idosoId}/emergencia_ativa` continua para compatibilidade com as telas e serviços atuais.
+- o `idosoId` acompanha o alarme;
+- a conclusão do alarme pode atualizar o lembrete do idoso correto.
+
+### Serviço de emergência
+
+- listeners são removidos em `onDestroy`;
+- chamadas repetidas de `onStartCommand` não registram novamente o mesmo monitoramento.
 
 ### Backup
 
-- `SharedPreferences` foi excluído do backup automático em nuvem e transferência entre dispositivos.
+- SharedPreferences foi excluído do backup automático.
 
 ## Riscos ainda existentes
 
-1. A chave do Maps exposta no histórico precisa ser revogada/rotacionada.
-2. As Security Rules do Realtime Database precisam ser revisadas e versionadas.
-3. A seleção de perfil ainda é um mecanismo de navegação, não de autorização.
-4. Responsável e Cuidador precisam de vínculos explícitos com idosos usando UID.
-5. Operações que recebem `idosoId` precisam ser protegidas no servidor.
-6. O PIN ainda existe no modelo remoto.
-7. O Idoso ainda não possui uma identidade Firebase equivalente ao fluxo de e-mail/senha.
-8. `idoso_teste` precisa ser removido quando a autenticação definitiva estiver pronta.
-9. A retenção de localização e dados de emergência ainda não está definida.
+1. Security Rules do Realtime Database não estão versionadas.
+2. O vínculo Responsável → Idoso ainda utiliza compatibilidades do protótipo e precisa migrar para UID.
+3. O vínculo Cuidador → Idoso ainda precisa de autorização por UID.
+4. O perfil de acesso escolhido na UI ainda não é uma autorização de backend.
+5. O PIN remoto ainda é utilizado no login do Idoso.
+6. `idoso_teste` ainda existe para debug.
+7. Operações por `idosoId` dependem das regras do servidor.
+8. A chave do Maps que esteve no histórico precisa ser revogada/rotacionada.
+9. A retenção de localização e emergência ainda não está definida.
 10. O acesso cruzado entre contas ainda precisa de teste formal.
 
 ## Critério para produção
 
-O SeniorLink não deve ser considerado pronto para produção enquanto:
+O SeniorLink não deve ser considerado pronto enquanto:
 
 - a chave exposta não for rotacionada;
-- as Security Rules não limitarem leitura/escrita por identidade e vínculo;
+- as Security Rules não limitarem leitura e escrita;
+- os vínculos não forem baseados em UID;
 - o PIN não tiver sido removido do modelo remoto;
-- os vínculos Responsável/Idoso e Cuidador/Idoso não estiverem definidos no backend;
-- o acesso cruzado entre contas não tiver sido testado;
-- a política de retenção de localização não estiver definida.
+- o acesso cruzado não tiver sido testado;
+- a retenção de localização não estiver definida.
 
-## Próxima etapa
+## Próxima prioridade
 
-Implementar, testar e versionar a camada de autorização:
+A próxima grande etapa de segurança é:
 
 ```text
-Responsável → Idoso
-Cuidador → Idoso
+auth.uid
+   ↓
+perfil autenticado
+   ↓
+vínculo Responsável/Cuidador
+   ↓
+idoso autorizado
 ```
 
-usando `auth.uid` como identidade.
+Somente depois disso o fluxo remoto deve ser tratado como produção.
