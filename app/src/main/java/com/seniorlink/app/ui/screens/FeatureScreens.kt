@@ -1,12 +1,22 @@
-
 package com.seniorlink.app.ui.screens
 
+import android.Manifest
+import android.app.TimePickerDialog
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,8 +25,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -24,25 +38,62 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.seniorlink.app.R
+import com.seniorlink.app.alarm.LembreteScheduler
+import com.seniorlink.app.data.FirestoreRepository
+import com.seniorlink.app.data.LembreteFirestore
+import com.seniorlink.app.location.LocationRepository
+import com.seniorlink.app.model.SeniorLinkPrefs
+import kotlinx.coroutines.launch
+import java.util.Calendar
+import java.util.Locale
 
 
 // ============================================================
@@ -55,8 +106,6 @@ private val AzulClaro = Color(0xFFEAF4FC)
 
 private val Verde = Color(0xFF079B91)
 private val VerdeClaro = Color(0xFFE8F7F5)
-
-private val LaranjaClaro = Color(0xFFFFF2DF)
 
 private val Vermelho = Color(0xFFE94B4B)
 private val VermelhoClaro = Color(0xFFFFF0F0)
@@ -71,27 +120,42 @@ private val Borda = Color(0xFFE1E8EF)
 
 
 // ============================================================
-// PERFIL
+// PERFIL DO IDOSO (INTEGRADO COM FIRESTORE E PREFERÊNCIAS)
 // ============================================================
 
 @Composable
 fun PerfilScreen(
     onVoltar: () -> Unit
 ) {
+    val context = LocalContext.current
+    val escala = SeniorLinkPrefs.escalaFonte
+    val altoContraste = SeniorLinkPrefs.altoContraste
 
-    var nome by remember { mutableStateOf("") }
-    var nascimento by remember { mutableStateOf("") }
-    var sangue by remember { mutableStateOf("") }
-    var alergias by remember { mutableStateOf("") }
-    var medicamentos by remember { mutableStateOf("") }
-    var condicoes by remember { mutableStateOf("") }
-    var contato by remember { mutableStateOf("") }
-    var telefone by remember { mutableStateOf("") }
+    val fundoAtual = if (altoContraste) Color.Black else Fundo
+    val cardFundo = if (altoContraste) Color(0xFF1A1A1A) else Branco
+    val tituloAtual = if (altoContraste) Color.Yellow else AzulEscuro
+    val subtituloAtual = if (altoContraste) Color.White else TextoSecundario
+
+    val perfilSalvo = SeniorLinkPrefs.perfilAtual
+
+    var nome by remember(perfilSalvo.nome) { mutableStateOf(perfilSalvo.nome) }
+    var idade by remember(perfilSalvo.idade) { mutableStateOf(perfilSalvo.idade) }
+    var sangue by remember(perfilSalvo.tipoSanguineo) { mutableStateOf(perfilSalvo.tipoSanguineo) }
+    var alergias by remember(perfilSalvo.alergias) { mutableStateOf(perfilSalvo.alergias) }
+    var condicoes by remember(perfilSalvo.condicoesMedicas) { mutableStateOf(perfilSalvo.condicoesMedicas) }
+    var contatoEmergencia by remember(perfilSalvo.contatoEmergencia) { mutableStateOf(perfilSalvo.contatoEmergencia) }
+    var endereco by remember(perfilSalvo.endereco) { mutableStateOf(perfilSalvo.endereco) }
+    var salvando by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "idoso_teste"
+        SeniorLinkPrefs.carregarPerfilDoFirestore(uid)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Fundo)
+            .background(fundoAtual)
             .verticalScroll(rememberScrollState())
             .padding(
                 start = 22.dp,
@@ -104,250 +168,110 @@ fun PerfilScreen(
         CabecalhoTela(
             titulo = "Meu perfil",
             subtitulo = "Informações importantes para sua segurança.",
-            onVoltar = onVoltar
+            onVoltar = onVoltar,
+            escala = escala,
+            cardFundo = cardFundo,
+            tituloCor = tituloAtual,
+            subtituloCor = subtituloAtual
         )
 
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.height(20.dp))
 
-        CardSecao("Informações pessoais") {
-
-            Campo("Nome completo", nome) {
-                nome = it
-            }
-
-            Campo("Data de nascimento", nascimento) {
-                nascimento = it
-            }
-        }
-
-        CardSecao("Informações de saúde") {
-
-            Campo("Tipo sanguíneo", sangue) {
-                sangue = it
-            }
-
-            Campo("Alergias", alergias) {
-                alergias = it
-            }
-
-            Campo("Medicamentos em uso", medicamentos) {
-                medicamentos = it
-            }
-
-            Campo("Condições importantes", condicoes) {
-                condicoes = it
-            }
-        }
-
-        CardSecao("Contato de confiança") {
-
-            Campo("Nome do contato", contato) {
-                contato = it
-            }
-
-            Campo("Telefone do contato", telefone) {
-                telefone = it
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        Button(
-            onClick = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp),
-            shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AzulPrincipal
-            )
-        ) {
-            Text(
-                text = "Salvar informações",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(Modifier.height(10.dp))
-
-        Text(
-            text = "Essas informações serão conectadas ao banco de dados na próxima etapa.",
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            fontSize = 12.sp,
-            color = TextoSecundario,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        RodapeTela()
-    }
-}
-
-
-// ============================================================
-// LOCALIZAÇÃO
-// ============================================================
-
-@Composable
-fun LocalizacaoScreen(
-    onVoltar: () -> Unit
-) {
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Fundo)
-            .verticalScroll(rememberScrollState())
-            .padding(
-                start = 22.dp,
-                top = 42.dp,
-                end = 22.dp,
-                bottom = 24.dp
-            )
-    ) {
-
-        CabecalhoTela(
-            titulo = "Localização",
-            subtitulo = "Veja onde você está.",
-            onVoltar = onVoltar
-        )
-
-        Spacer(Modifier.height(26.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    VerdeClaro,
-                    RoundedCornerShape(18.dp)
-                )
-                .padding(
-                    horizontal = 16.dp,
-                    vertical = 14.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Box(
                 modifier = Modifier
-                    .size(12.dp)
-                    .background(
-                        Verde,
-                        RoundedCornerShape(50)
-                    )
-            )
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
+                    .size(78.dp)
+                    .clip(CircleShape)
+                    .background(if (altoContraste) Color.Yellow else AzulPrincipal),
+                contentAlignment = Alignment.Center
             ) {
-
                 Text(
-                    text = "Localização pronta",
-                    fontSize = 16.sp,
+                    text = nome.trim().firstOrNull()?.uppercase() ?: "M",
+                    fontSize = (32 * escala).sp,
                     fontWeight = FontWeight.Bold,
-                    color = Verde
-                )
-
-                Text(
-                    text = "O GPS será conectado em breve.",
-                    fontSize = 12.sp,
-                    color = TextoSecundario
+                    color = if (altoContraste) Color.Black else Branco
                 )
             }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = nome.ifBlank { "Idoso" },
+                fontSize = (18 * escala).sp,
+                fontWeight = FontWeight.Bold,
+                color = tituloAtual
+            )
         }
 
         Spacer(Modifier.height(20.dp))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = AzulClaro
-            )
-        ) {
+        CardSecao("Informações pessoais", escala = escala, cardFundo = cardFundo, tituloCor = tituloAtual) {
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(290.dp),
-                contentAlignment = Alignment.Center
-            ) {
+            Campo("Nome completo", nome, escala = escala) {
+                nome = it
+            }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+            Campo("Idade", idade, escala = escala) {
+                idade = it
+            }
 
-                    Image(
-                        painter = painterResource(
-                            R.drawable.ic_localizacao
-                        ),
-                        contentDescription = "Localização",
-                        modifier = Modifier.size(76.dp),
-                        contentScale = ContentScale.Fit
-                    )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    Text(
-                        text = "Sua localização",
-                        fontSize = 21.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AzulEscuro
-                    )
-
-                    Spacer(Modifier.height(5.dp))
-
-                    Text(
-                        text = "O Google Maps será exibido aqui.",
-                        fontSize = 13.sp,
-                        color = TextoSecundario
-                    )
-                }
+            Campo("Endereço residencial", endereco, escala = escala) {
+                endereco = it
             }
         }
 
-        Spacer(Modifier.height(18.dp))
+        CardSecao("Informações de saúde", escala = escala, cardFundo = cardFundo, tituloCor = tituloAtual) {
 
-        CardSecao("Informações da localização") {
+            Campo("Tipo sanguíneo", sangue, escala = escala) {
+                sangue = it
+            }
 
-            LinhaInformacao(
-                "Endereço",
-                "Ainda não disponível"
-            )
+            Campo("Alergias", alergias, escala = escala) {
+                alergias = it
+            }
 
-            LinhaInformacao(
-                "Última atualização",
-                "Ainda não disponível"
-            )
+            Campo("Condições e medicamentos em uso", condicoes, escala = escala) {
+                condicoes = it
+            }
+        }
+
+        CardSecao("Contato de emergência", escala = escala, cardFundo = cardFundo, tituloCor = tituloAtual) {
+
+            Campo("Telefone do contato", contatoEmergencia, escala = escala) {
+                contatoEmergencia = it
+            }
         }
 
         Spacer(Modifier.height(8.dp))
 
         Button(
-            onClick = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp),
-            shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AzulPrincipal
-            )
-        ) {
-            Text(
-                "Atualizar localização",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Button(
-            onClick = {},
+            onClick = {
+                salvando = true
+                val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "idoso_teste"
+                val novoPerfil = perfilSalvo.copy(
+                    uid = uid,
+                    nome = nome.trim(),
+                    idade = idade.trim(),
+                    tipoSanguineo = sangue.trim(),
+                    alergias = alergias.trim(),
+                    condicoesMedicas = condicoes.trim(),
+                    contatoEmergencia = contatoEmergencia.trim(),
+                    endereco = endereco.trim()
+                )
+                SeniorLinkPrefs.salvarPerfilNoFirestore(
+                    perfil = novoPerfil,
+                    onSuccess = {
+                        salvando = false
+                        Toast.makeText(context, "Informações salvas com sucesso!", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = { erro ->
+                        salvando = false
+                        Toast.makeText(context, erro, Toast.LENGTH_LONG).show()
+                    }
+                )
+            },
+            enabled = !salvando,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(58.dp),
@@ -357,50 +281,200 @@ fun LocalizacaoScreen(
             )
         ) {
             Text(
-                "Compartilhar localização",
-                fontSize = 16.sp,
+                text = if (salvando) "Salvando..." else "Salvar informações",
+                fontSize = (17 * escala).sp,
                 fontWeight = FontWeight.Bold
             )
         }
 
-        Spacer(Modifier.height(20.dp))
-
-        Text(
-            text = "Sua localização poderá ser compartilhada com uma pessoa de confiança cadastrada no SeniorLink.",
-            modifier = Modifier.fillMaxWidth(),
-            fontSize = 12.sp,
-            lineHeight = 18.sp,
-            color = TextoSecundario,
-            textAlign = TextAlign.Center
-        )
-
         Spacer(Modifier.height(24.dp))
 
-        RodapeTela()
+        RodapeTela(subtituloCor = subtituloAtual)
     }
 }
 
 
 // ============================================================
-// LEMBRETES
+// LOCALIZAÇÃO (TEMPO REAL DO IDOSO E MAPA DO RESPONSÁVEL)
 // ============================================================
 
 @Composable
-fun LembretesScreen(
-    onVoltar: () -> Unit,
-    onNovoLembrete: () -> Unit = {}
+private fun MapaLocalizacao(
+    location: Location,
+    tituloMarcador: String = "Idoso",
+    modifier: Modifier = Modifier
 ) {
 
-    var titulo by remember {
-        mutableStateOf("")
+    val posicao = LatLng(
+        location.latitude,
+        location.longitude
+    )
+
+    val cameraPositionState =
+        rememberCameraPositionState {
+            position =
+                CameraPosition.fromLatLngZoom(
+                    posicao,
+                    16f
+                )
+        }
+
+    val markerState =
+        rememberUpdatedMarkerState(
+            position = posicao
+        )
+
+    LaunchedEffect(
+        location.latitude,
+        location.longitude
+    ) {
+        cameraPositionState.animate(
+            CameraUpdateFactory.newLatLngZoom(
+                posicao,
+                16f
+            )
+        )
+        markerState.position = posicao
     }
 
-    var horario by remember {
-        mutableStateOf("")
+    GoogleMap(
+        modifier = modifier,
+        cameraPositionState = cameraPositionState,
+        properties = MapProperties(
+            isBuildingEnabled = true,
+            isTrafficEnabled = false,
+            isIndoorEnabled = false
+        ),
+        uiSettings = MapUiSettings(
+            zoomControlsEnabled = true,
+            compassEnabled = true,
+            scrollGesturesEnabled = true,
+            zoomGesturesEnabled = true,
+            rotationGesturesEnabled = true
+        )
+    ) {
+        Marker(
+            state = markerState,
+            title = tituloMarcador,
+            snippet = "Localização atual do SeniorLink"
+        )
+    }
+}
+
+@Composable
+fun LocalizacaoScreen(
+    onVoltar: () -> Unit,
+    idosoId: String = ""
+) {
+    val context = LocalContext.current
+    val locationRepository = remember { LocationRepository(context) }
+
+    var localizacaoLocal by remember { mutableStateOf<Location?>(null) }
+    var latRemota by remember { mutableStateOf<Double?>(null) }
+    var lngRemota by remember { mutableStateOf<Double?>(null) }
+    var precisaoRemota by remember { mutableStateOf<Float?>(null) }
+    var nomeIdosoRemoto by remember { mutableStateOf("Idoso") }
+
+    var rastreamentoAtivo by remember { mutableStateOf(false) }
+    var mensagemStatus by remember { mutableStateOf("Aguardando sinal de GPS...") }
+
+    // MODO RESPONSÁVEL: Escuta a localização do idoso no Firebase Realtime Database
+    DisposableEffect(idosoId) {
+        if (idosoId.isNotBlank()) {
+            val ref = FirebaseDatabase.getInstance().getReference("usuarios").child(idosoId)
+            val listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    nomeIdosoRemoto = snapshot.child("nome").getValue(String::class.java) ?: "Idoso"
+                    val locSnap = snapshot.child("localizacao")
+                    val lat = locSnap.child("latitude").getValue(Double::class.java)
+                    val lng = locSnap.child("longitude").getValue(Double::class.java)
+                    val prec = locSnap.child("precisao").getValue(Double::class.java)?.toFloat()
+
+                    if (lat != null && lng != null) {
+                        latRemota = lat
+                        lngRemota = lng
+                        precisaoRemota = prec
+                        rastreamentoAtivo = true
+                        mensagemStatus = "Localização de $nomeIdosoRemoto recebida em tempo real."
+                    } else {
+                        rastreamentoAtivo = false
+                        mensagemStatus = "Aguardando $nomeIdosoRemoto abrir o aplicativo e liberar o GPS."
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    mensagemStatus = "Erro ao buscar localização: ${error.message}"
+                }
+            }
+            ref.addValueEventListener(listener)
+            onDispose { ref.removeEventListener(listener) }
+        } else {
+            onDispose { }
+        }
     }
 
-    var lembretes by remember {
-        mutableStateOf(listOf<String>())
+    // MODO IDOSO: Captura o GPS do próprio aparelho
+    fun possuiPermissaoLocalizacao(): Boolean {
+        val permissaoPrecisa = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val permissaoAproximada = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        return permissaoPrecisa || permissaoAproximada
+    }
+
+    fun iniciarLocalizacaoLocal() {
+        if (!possuiPermissaoLocalizacao()) {
+            mensagemStatus = "Permissão de localização necessária."
+            return
+        }
+
+        locationRepository.iniciarAtualizacao { location ->
+            localizacaoLocal = location
+            rastreamentoAtivo = true
+            mensagemStatus = "Localização atualizada."
+        }
+    }
+
+    val permissaoLocalizacaoLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissoes ->
+            val precisa = permissoes[Manifest.permission.ACCESS_FINE_LOCATION] == true
+            val aproximada = permissoes[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+            if (precisa || aproximada) {
+                mensagemStatus = "Permissão concedida."
+                iniciarLocalizacaoLocal()
+            } else {
+                mensagemStatus = "A permissão de localização foi negada."
+            }
+        }
+
+    DisposableEffect(Unit) {
+        if (idosoId.isBlank() && possuiPermissaoLocalizacao()) {
+            iniciarLocalizacaoLocal()
+        }
+        onDispose {
+            locationRepository.pararAtualizacao()
+        }
+    }
+
+    val locationParaMapa: Location? = remember(latRemota, lngRemota, localizacaoLocal, idosoId) {
+        if (idosoId.isNotBlank() && latRemota != null && lngRemota != null) {
+            Location("firebase").apply {
+                latitude = latRemota!!
+                longitude = lngRemota!!
+                accuracy = precisaoRemota ?: 10f
+            }
+        } else {
+            localizacaoLocal
+        }
     }
 
     Column(
@@ -417,247 +491,108 @@ fun LembretesScreen(
     ) {
 
         CabecalhoTela(
-            titulo = "Lembretes",
-            subtitulo = "Organize os horários importantes do seu dia.",
+            titulo = if (idosoId.isNotBlank()) "Localização de $nomeIdosoRemoto" else "Localização",
+            subtitulo = "Acompanhe a localização em tempo real.",
             onVoltar = onVoltar
         )
 
         Spacer(Modifier.height(26.dp))
 
-        Button(
-            onClick = onNovoLembrete,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp),
+        Card(
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AzulPrincipal
+            colors = CardDefaults.cardColors(
+                containerColor = if (rastreamentoAtivo) VerdeClaro else AzulClaro
             )
         ) {
-            Text(
-                "Adicionar novo lembrete",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(13.dp)
+                        .background(
+                            if (rastreamentoAtivo) Verde else AzulPrincipal,
+                            RoundedCornerShape(50)
+                        )
+                )
+
+                Spacer(Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (rastreamentoAtivo) "Localização ativa" else "Localização aguardando",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (rastreamentoAtivo) Verde else AzulPrincipal
+                    )
+
+                    Spacer(Modifier.height(3.dp))
+
+                    Text(
+                        text = mensagemStatus,
+                        fontSize = 12.sp,
+                        color = TextoSecundario
+                    )
+                }
+            }
         }
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(20.dp))
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Branco
-            )
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Branco)
         ) {
-
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement =
-                    Arrangement.spacedBy(10.dp)
-            ) {
-
-                Text(
-                    text = "Adicionar rapidamente",
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AzulEscuro
-                )
-
-                OutlinedTextField(
-                    value = titulo,
-                    onValueChange = {
-                        titulo = it
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = {
-                        Text("O que precisa lembrar?")
-                    },
-                    placeholder = {
-                        Text("Ex.: Tomar medicamento")
-                    }
-                )
-
-                OutlinedTextField(
-                    value = horario,
-                    onValueChange = {
-                        horario = it
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = {
-                        Text("Horário")
-                    },
-                    placeholder = {
-                        Text("Ex.: 08:00")
-                    }
-                )
-
-                Button(
-                    onClick = {
-
-                        if (titulo.isNotBlank()) {
-
-                            lembretes =
-                                lembretes +
-                                        if (horario.isBlank()) {
-                                            titulo
-                                        } else {
-                                            "$horario — $titulo"
-                                        }
-
-                            titulo = ""
-                            horario = ""
-                        }
-                    },
+            if (locationParaMapa != null) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(54.dp),
-                    shape = RoundedCornerShape(17.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Verde
-                    )
+                        .height(330.dp)
                 ) {
-                    Text(
-                        "Adicionar lembrete",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                    MapaLocalizacao(
+                        location = locationParaMapa,
+                        tituloMarcador = if (idosoId.isNotBlank()) nomeIdosoRemoto else "Idoso",
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
-            }
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        Text(
-            text = "Meus lembretes",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = AzulEscuro
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        if (lembretes.isEmpty()) {
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = LaranjaClaro
-                )
-            ) {
-
-                Column(
+            } else {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment =
-                        Alignment.CenterHorizontally
+                        .height(330.dp)
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-
-                    Image(
-                        painter = painterResource(
-                            R.drawable.ic_lembretes
-                        ),
-                        contentDescription = "Lembretes",
-                        modifier = Modifier.size(56.dp),
-                        contentScale = ContentScale.Fit
-                    )
-
-                    Spacer(Modifier.height(10.dp))
-
-                    Text(
-                        text = "Nenhum lembrete",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AzulEscuro
-                    )
-
-                    Spacer(Modifier.height(5.dp))
-
-                    Text(
-                        text = "Adicione um lembrete importante para o seu dia.",
-                        modifier = Modifier.fillMaxWidth(),
-                        fontSize = 13.sp,
-                        lineHeight = 19.sp,
-                        color = TextoSecundario,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-        } else {
-
-            lembretes.forEachIndexed { index, item ->
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 10.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Branco
-                    )
-                ) {
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment =
-                            Alignment.CenterVertically
-                    ) {
-
-                        Box(
-                            modifier = Modifier
-                                .size(50.dp)
-                                .background(
-                                    AzulClaro,
-                                    RoundedCornerShape(16.dp)
-                                ),
-                            contentAlignment =
-                                Alignment.Center
-                        ) {
-
-                            Image(
-                                painter = painterResource(
-                                    R.drawable.ic_lembretes
-                                ),
-                                contentDescription =
-                                    "Lembrete",
-                                modifier = Modifier.size(34.dp),
-                                contentScale =
-                                    ContentScale.Fit
-                            )
-                        }
-
-                        Spacer(
-                            Modifier.width(14.dp)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Image(
+                            painter = painterResource(R.drawable.ic_localizacao),
+                            contentDescription = "Localização",
+                            modifier = Modifier.size(76.dp),
+                            contentScale = ContentScale.Fit
                         )
+
+                        Spacer(Modifier.height(14.dp))
 
                         Text(
-                            text = item,
-                            modifier = Modifier.weight(1f),
-                            fontSize = 16.sp,
-                            color = Texto
+                            text = "Aguardando localização",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AzulEscuro
                         )
 
-                        TextButton(
-                            onClick = {
-                                lembretes =
-                                    lembretes.filterIndexed {
-                                            i, _ ->
-                                        i != index
-                                    }
-                            }
-                        ) {
-                            Text(
-                                "Excluir",
-                                color = Vermelho
-                            )
-                        }
+                        Spacer(Modifier.height(6.dp))
+
+                        Text(
+                            text = mensagemStatus,
+                            fontSize = 13.sp,
+                            color = TextoSecundario,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
@@ -665,18 +600,529 @@ fun LembretesScreen(
 
         Spacer(Modifier.height(18.dp))
 
-        Text(
-            text = "Os lembretes serão conectados ao banco de dados e às notificações do celular.",
-            modifier = Modifier.fillMaxWidth(),
-            fontSize = 12.sp,
-            lineHeight = 18.sp,
-            color = TextoSecundario,
-            textAlign = TextAlign.Center
-        )
+        CardSecao(titulo = "Informações da localização") {
+            LinhaInformacao(
+                "Latitude",
+                locationParaMapa?.latitude?.toString() ?: "Ainda não disponível"
+            )
 
-        Spacer(Modifier.height(24.dp))
+            LinhaInformacao(
+                "Longitude",
+                locationParaMapa?.longitude?.toString() ?: "Ainda não disponível"
+            )
+
+            LinhaInformacao(
+                "Precisão",
+                locationParaMapa?.accuracy?.let { "${it.toInt()} metros" } ?: "Ainda não disponível"
+            )
+
+            LinhaInformacao(
+                "Status",
+                if (rastreamentoAtivo) "Atualizando" else "Aguardando"
+            )
+        }
+
+        if (idosoId.isBlank()) {
+            Spacer(Modifier.height(18.dp))
+
+            Button(
+                onClick = {
+                    if (possuiPermissaoLocalizacao()) {
+                        iniciarLocalizacaoLocal()
+                    } else {
+                        permissaoLocalizacaoLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AzulPrincipal)
+            ) {
+                Text(
+                    text = if (rastreamentoAtivo) "Atualizar localização" else "Ativar localização",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            if (localizacaoLocal != null) {
+                OutlinedButton(
+                    onClick = {
+                        locationRepository.pararAtualizacao()
+                        rastreamentoAtivo = false
+                        mensagemStatus = "Atualização de localização pausada."
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(58.dp),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Text(
+                        text = "Pausar localização",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AzulPrincipal
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
 
         RodapeTela()
+    }
+}
+
+
+// ============================================================
+// LEMBRETES (ISOLADOS POR IDOSO + ALARME NA TELA BLOQUEADA)
+// ============================================================
+
+@Composable
+fun LembretesScreen(
+    onVoltar: () -> Unit,
+    idosoId: String = "",
+    @Suppress("UNUSED_PARAMETER")
+    onNovoLembrete: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val repo = remember { FirestoreRepository() }
+
+    val prefs = remember { context.getSharedPreferences("seniorlink_prefs", Context.MODE_PRIVATE) }
+    val idAlvo = remember(idosoId) {
+        idosoId.ifBlank { prefs.getString("id_idoso", "") ?: "" }
+    }
+
+    val lembretes by repo.observarLembretesPorIdoso(idAlvo).collectAsState(initial = emptyList())
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    LaunchedEffect(lembretes) {
+        if (idosoId.isBlank()) {
+            lembretes.forEach { item ->
+                if (!item.concluido) {
+                    LembreteScheduler.agendarLembrete(context, item.id, item.titulo, item.horario, item.categoria)
+                } else {
+                    LembreteScheduler.cancelarLembrete(context, item.id)
+                }
+            }
+        }
+    }
+
+    var mostrarNovoModal by remember { mutableStateOf(false) }
+
+    val concluidos = lembretes.count { it.concluido }
+    val total = lembretes.size
+    val progresso = if (total > 0) concluidos.toFloat() / total else 0f
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Fundo)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = 22.dp,
+                    top = 42.dp,
+                    end = 22.dp,
+                    bottom = 20.dp
+                )
+        ) {
+            CabecalhoTela(
+                titulo = "Meus Lembretes",
+                subtitulo = "Avisos sonoros mesmo com tela bloqueada.",
+                onVoltar = onVoltar
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                color = AzulEscuro,
+                shadowElevation = 4.dp
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Rotina de Hoje",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Branco
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (total == 0) "Nenhum lembrete agendado" else "$concluidos de $total concluídos",
+                                fontSize = 14.sp,
+                                color = Branco.copy(alpha = 0.85f)
+                            )
+                        }
+                        Surface(
+                            shape = CircleShape,
+                            color = Verde,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "${(progresso * 100).toInt()}%",
+                                    color = Branco,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    LinearProgressIndicator(
+                        progress = { progresso },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(CircleShape),
+                        color = Verde,
+                        trackColor = Branco.copy(alpha = 0.2f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            if (lembretes.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("⏰", fontSize = 48.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Tudo tranquilo por aqui!",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AzulEscuro
+                        )
+                        Text(
+                            text = "Toque no botão abaixo para criar um aviso.",
+                            fontSize = 14.sp,
+                            color = TextoSecundario
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 84.dp)
+                ) {
+                    items(lembretes, key = { it.id }) { lembrete ->
+                        CardLembreteBonito(
+                            lembrete = lembrete,
+                            onAlternarConcluido = {
+                                coroutineScope.launch {
+                                    repo.alternarConcluidoLembretePorIdoso(idAlvo, lembrete.id, lembrete.concluido)
+                                }
+                            },
+                            onExcluir = {
+                                coroutineScope.launch {
+                                    LembreteScheduler.cancelarLembrete(context, lembrete.id)
+                                    repo.excluirLembretePorIdoso(idAlvo, lembrete.id)
+                                    Toast.makeText(context, "Lembrete removido", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        Button(
+            onClick = { mostrarNovoModal = true },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp, vertical = 20.dp)
+                .height(60.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Verde),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+        ) {
+            Text(
+                text = "+ Criar Novo Lembrete",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Branco
+            )
+        }
+
+        if (mostrarNovoModal) {
+            var tituloNovo by remember { mutableStateOf("") }
+            var categoriaSelecionada by remember { mutableStateOf("Remédio") }
+            var horarioSelecionado by remember { mutableStateOf("08:00") }
+
+            val calendar = Calendar.getInstance()
+            val timePickerDialog = TimePickerDialog(
+                context,
+                { _, hora, minuto ->
+                    horarioSelecionado = String.format(Locale.getDefault(), "%02d:%02d", hora, minuto)
+                },
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE),
+                true
+            )
+
+            AlertDialog(
+                onDismissRequest = { mostrarNovoModal = false },
+                shape = RoundedCornerShape(24.dp),
+                containerColor = Branco,
+                title = {
+                    Text(
+                        text = "Novo Lembrete",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = AzulEscuro
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        OutlinedTextField(
+                            value = tituloNovo,
+                            onValueChange = { tituloNovo = it },
+                            label = {
+                                Text(
+                                    text = "O que lembrar?",
+                                    color = Color(0xFF123B63),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
+                            placeholder = {
+                                Text(
+                                    text = "Ex: Tomar Losartana 50mg",
+                                    color = Color(0xFF66788A)
+                                )
+                            },
+                            textStyle = TextStyle(
+                                color = Color(0xFF0A2E4D),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color(0xFF0A2E4D),
+                                unfocusedTextColor = Color(0xFF0A2E4D),
+                                disabledTextColor = Color(0xFF0A2E4D),
+                                focusedContainerColor = Color(0xFFF0F4F8),
+                                unfocusedContainerColor = Color(0xFFF0F4F8),
+                                cursorColor = Color(0xFF079B91),
+                                focusedBorderColor = Color(0xFF079B91),
+                                unfocusedBorderColor = Color(0xFF1764A5),
+                                focusedLabelColor = Color(0xFF079B91),
+                                unfocusedLabelColor = Color(0xFF123B63),
+                                selectionColors = TextSelectionColors(
+                                    handleColor = Color(0xFF079B91),
+                                    backgroundColor = Color(0xFF079B91).copy(alpha = 0.25f)
+                                )
+                            ),
+                            singleLine = true,
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp)
+                                .clickable { timePickerDialog.show() },
+                            shape = RoundedCornerShape(16.dp),
+                            color = Fundo,
+                            border = BorderStroke(1.5.dp, Verde)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Horário do Alarme:", fontSize = 15.sp, color = TextoSecundario, fontWeight = FontWeight.Medium)
+                                Text("⏰ $horarioSelecionado", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = AzulEscuro)
+                            }
+                        }
+
+                        Text("Categoria:", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = AzulEscuro)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf("Remédio", "Consulta", "Água / Rotina").forEach { cat ->
+                                val ativo = categoriaSelecionada == cat
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(42.dp)
+                                        .clickable { categoriaSelecionada = cat },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (ativo) AzulEscuro else Fundo,
+                                    border = BorderStroke(1.dp, if (ativo) AzulEscuro else Borda)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = cat,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (ativo) Branco else AzulEscuro
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (tituloNovo.isBlank()) {
+                                Toast.makeText(context, "Digite o nome do lembrete.", Toast.LENGTH_SHORT).show()
+                            } else if (idAlvo.isBlank()) {
+                                Toast.makeText(context, "Nenhum idoso identificado.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                coroutineScope.launch {
+                                    repo.salvarLembretePorIdoso(idAlvo, tituloNovo.trim(), horarioSelecionado, categoriaSelecionada)
+                                    Toast.makeText(context, "Alarme agendado para às $horarioSelecionado!", Toast.LENGTH_SHORT).show()
+                                    mostrarNovoModal = false
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Verde)
+                    ) {
+                        Text("Agendar Alarme", color = Branco, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { mostrarNovoModal = false }) {
+                        Text("Cancelar", color = TextoSecundario)
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CardLembreteBonito(
+    lembrete: LembreteFirestore,
+    onAlternarConcluido: () -> Unit,
+    onExcluir: () -> Unit
+) {
+    val corCategoria = when (lembrete.categoria) {
+        "Remédio" -> Verde
+        "Consulta" -> AzulPrincipal
+        else -> Color(0xFFE67E22)
+    }
+
+    val iconeEmoji = when (lembrete.categoria) {
+        "Remédio" -> "💊"
+        "Consulta" -> "🩺"
+        else -> "💧"
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onAlternarConcluido() },
+        shape = RoundedCornerShape(20.dp),
+        color = if (lembrete.concluido) Color(0xFFEFF4F6) else Branco,
+        shadowElevation = if (lembrete.concluido) 0.dp else 3.dp,
+        border = BorderStroke(
+            width = if (lembrete.concluido) 1.dp else 1.5.dp,
+            color = if (lembrete.concluido) Borda else corCategoria.copy(alpha = 0.5f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = if (lembrete.concluido) Color.LightGray.copy(alpha = 0.3f) else corCategoria.copy(alpha = 0.12f),
+                modifier = Modifier
+                    .width(76.dp)
+                    .height(68.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(text = iconeEmoji, fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = lembrete.horario,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (lembrete.concluido) TextoSecundario else corCategoria
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = lembrete.categoria.uppercase(),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (lembrete.concluido) TextoSecundario else corCategoria
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = lembrete.titulo,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (lembrete.concluido) TextoSecundario else AzulEscuro,
+                    textDecoration = if (lembrete.concluido) TextDecoration.LineThrough else TextDecoration.None
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = if (lembrete.concluido) "✓ Concluído" else "Toque para marcar como feito",
+                    fontSize = 12.sp,
+                    color = if (lembrete.concluido) Verde else TextoSecundario,
+                    fontWeight = if (lembrete.concluido) FontWeight.Bold else FontWeight.Normal
+                )
+            }
+
+            IconButton(onClick = onExcluir) {
+                Text("🗑️", fontSize = 18.sp)
+            }
+        }
     }
 }
 
@@ -691,7 +1137,7 @@ fun AprenderScreen(
 ) {
 
     var aberto by remember {
-        mutableStateOf(-1)
+        mutableIntStateOf(-1)
     }
 
     val tutoriais = listOf(
@@ -802,184 +1248,83 @@ fun AprenderScreen(
 
 
 // ============================================================
-// JOGOS
-// ============================================================
-
-@Composable
-fun JogosScreen(
-    onVoltar: () -> Unit
-) {
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Fundo)
-            .verticalScroll(rememberScrollState())
-            .padding(
-                start = 22.dp,
-                top = 42.dp,
-                end = 22.dp,
-                bottom = 24.dp
-            )
-    ) {
-
-        CabecalhoTela(
-            titulo = "Jogos",
-            subtitulo = "Exercite a mente de forma simples e divertida.",
-            onVoltar = onVoltar
-        )
-
-        Spacer(Modifier.height(26.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = AzulClaro
-            )
-        ) {
-
-            Column(
-                modifier = Modifier.padding(20.dp)
-            ) {
-
-                Row(
-                    verticalAlignment =
-                        Alignment.CenterVertically
-                ) {
-
-                    Box(
-                        modifier = Modifier
-                            .size(64.dp)
-                            .background(
-                                Branco,
-                                RoundedCornerShape(20.dp)
-                            ),
-                        contentAlignment =
-                            Alignment.Center
-                    ) {
-
-                        Image(
-                            painter = painterResource(
-                                R.drawable.ic_jogos
-                            ),
-                            contentDescription = "Jogos",
-                            modifier = Modifier.size(48.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                    }
-
-                    Spacer(Modifier.width(16.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-
-                        Text(
-                            text = "Caça-palavras",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = AzulEscuro
-                        )
-
-                        Spacer(Modifier.height(4.dp))
-
-                        Text(
-                            text = "Encontre palavras e exercite sua atenção.",
-                            fontSize = 13.sp,
-                            lineHeight = 19.sp,
-                            color = TextoSecundario
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(18.dp))
-
-                Button(
-                    onClick = {
-                        // Próxima etapa:
-                        // abrir o jogo de caça-palavras.
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(58.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AzulPrincipal
-                    )
-                ) {
-
-                    Text(
-                        text = "Jogar agora",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(14.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Branco
-            )
-        ) {
-
-            Column(
-                modifier = Modifier.padding(18.dp)
-            ) {
-
-                Text(
-                    text = "Outros jogos",
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AzulEscuro
-                )
-
-                Spacer(Modifier.height(6.dp))
-
-                Text(
-                    text =
-                        "Em breve teremos mais atividades para memória, atenção e raciocínio.",
-                    fontSize = 13.sp,
-                    lineHeight = 19.sp,
-                    color = TextoSecundario
-                )
-            }
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        Text(
-            text = "O objetivo dos jogos é tornar o uso do SeniorLink mais agradável e estimular atividades simples de atenção.",
-            modifier = Modifier.fillMaxWidth(),
-            fontSize = 12.sp,
-            lineHeight = 18.sp,
-            color = TextoSecundario,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.height(24.dp))
-
-        RodapeTela()
-    }
-}
-
-
-// ============================================================
-// EMERGÊNCIA
+// EMERGÊNCIA COM ALERTA E LOCALIZAÇÃO EM TEMPO REAL (BLINDADO)
 // ============================================================
 
 @Composable
 fun EmergenciaScreen(
     onVoltar: () -> Unit
 ) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("seniorlink_prefs", Context.MODE_PRIVATE) }
 
-    var confirmar by remember {
-        mutableStateOf(false)
+    // Fallback robusto para garantir que o idosoId nunca fique em branco
+    val authUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    val idosoId = remember {
+        val saved = prefs.getString("id_idoso", "") ?: ""
+        if (saved.isNotBlank()) saved else authUid
+    }
+    val nomeIdoso = remember {
+        val savedName = prefs.getString("nome_idoso", "") ?: ""
+        if (savedName.isNotBlank()) savedName else (FirebaseAuth.getInstance().currentUser?.displayName ?: "Idoso")
+    }
+
+    val repo = remember { FirestoreRepository() }
+    val locationRepo = remember { LocationRepository(context) }
+
+    var confirmar by remember { mutableStateOf(false) }
+    var alertaAtivo by remember { mutableStateOf(false) }
+    var ultimaLoc by remember { mutableStateOf<Location?>(null) }
+
+    DisposableEffect(alertaAtivo) {
+        if (alertaAtivo && idosoId.isNotBlank()) {
+            val temPermissao = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (temPermissao) {
+                locationRepo.iniciarAtualizacao { loc ->
+                    ultimaLoc = loc
+                    val dadosLoc = mapOf(
+                        "latitude" to loc.latitude,
+                        "longitude" to loc.longitude,
+                        "precisao" to loc.accuracy.toDouble(),
+                        "atualizadoEm" to System.currentTimeMillis()
+                    )
+                    // Atualiza Realtime Database diretamente para entrega imediata ao responsável
+                    FirebaseDatabase.getInstance()
+                        .getReference("usuarios")
+                        .child(idosoId)
+                        .child("localizacao")
+                        .setValue(dadosLoc)
+
+                    FirebaseDatabase.getInstance()
+                        .getReference("emergencias")
+                        .child(idosoId)
+                        .setValue(
+                            mapOf(
+                                "idosoId" to idosoId,
+                                "nome" to nomeIdoso,
+                                "latitude" to loc.latitude,
+                                "longitude" to loc.longitude,
+                                "timestamp" to System.currentTimeMillis(),
+                                "status" to "ativo"
+                            )
+                        )
+
+                    repo.dispararEmergencia(idosoId, nomeIdoso, loc.latitude, loc.longitude) {}
+                }
+            } else {
+                repo.dispararEmergencia(idosoId, nomeIdoso, null, null) {}
+            }
+        }
+        onDispose {
+            locationRepo.pararAtualizacao()
+        }
     }
 
     Column(
@@ -1007,7 +1352,7 @@ fun EmergenciaScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(
-                containerColor = VermelhoClaro
+                containerColor = if (alertaAtivo) Vermelho else VermelhoClaro
             )
         ) {
 
@@ -1018,8 +1363,7 @@ fun EmergenciaScreen(
                         horizontal = 20.dp,
                         vertical = 24.dp
                     ),
-                horizontalAlignment =
-                    Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
                 Box(
@@ -1029,16 +1373,14 @@ fun EmergenciaScreen(
                             Branco,
                             RoundedCornerShape(28.dp)
                         ),
-                    contentAlignment =
-                        Alignment.Center
+                    contentAlignment = Alignment.Center
                 ) {
 
                     Image(
                         painter = painterResource(
                             R.drawable.ic_emergencia
                         ),
-                        contentDescription =
-                            "Emergência",
+                        contentDescription = "Emergência",
                         modifier = Modifier.size(68.dp),
                         contentScale = ContentScale.Fit
                     )
@@ -1047,162 +1389,71 @@ fun EmergenciaScreen(
                 Spacer(Modifier.height(20.dp))
 
                 Text(
-                    text = "Precisa de ajuda?",
+                    text = if (alertaAtivo) "ALERTA ENVIADO!" else "Precisa de ajuda?",
                     fontSize = 25.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Vermelho,
+                    color = if (alertaAtivo) Branco else Vermelho,
                     textAlign = TextAlign.Center
                 )
 
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text =
-                        "Toque no botão abaixo para pedir ajuda a uma pessoa de confiança.",
+                    text = if (alertaAtivo) {
+                        "Seu responsável foi notificado e está acompanhando sua localização em tempo real."
+                    } else {
+                        "Toque no botão abaixo para pedir ajuda com sua localização em tempo real."
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     fontSize = 15.sp,
                     lineHeight = 22.sp,
-                    color = Texto,
+                    color = if (alertaAtivo) Branco else Texto,
                     textAlign = TextAlign.Center
                 )
 
                 Spacer(Modifier.height(22.dp))
 
-                Button(
-                    onClick = {
-                        confirmar = true
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(68.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Vermelho
-                    )
-                ) {
-
-                    Text(
-                        text = "PEDIR AJUDA",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
+                if (!alertaAtivo) {
+                    Button(
+                        onClick = { confirmar = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(68.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Vermelho)
+                    ) {
+                        Text(
+                            text = "PEDIR AJUDA",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Branco
+                        )
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            alertaAtivo = false
+                            FirebaseDatabase.getInstance().getReference("emergencias").child(idosoId).removeValue()
+                            FirebaseDatabase.getInstance().getReference("usuarios").child(idosoId).child("alertaAtivo").setValue(false)
+                            repo.encerrarEmergencia(idosoId)
+                            Toast.makeText(context, "Alerta encerrado.", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(62.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Branco)
+                    ) {
+                        Text(
+                            text = "CANCELAR ALERTA",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Vermelho
+                        )
+                    }
                 }
             }
         }
-
-        Spacer(Modifier.height(18.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Branco
-            )
-        ) {
-
-            Column(
-                modifier = Modifier.padding(18.dp)
-            ) {
-
-                Text(
-                    text = "Pessoa de confiança",
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AzulEscuro
-                )
-
-                Spacer(Modifier.height(6.dp))
-
-                Text(
-                    text =
-                        "O SeniorLink poderá avisar uma pessoa cadastrada quando você pedir ajuda.",
-                    fontSize = 13.sp,
-                    lineHeight = 19.sp,
-                    color = TextoSecundario
-                )
-
-                Spacer(Modifier.height(14.dp))
-
-                OutlinedButton(
-                    onClick = {},
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(17.dp)
-                ) {
-
-                    Text(
-                        text = "Configurar pessoa de confiança",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = AzulClaro
-            )
-        ) {
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
-                verticalAlignment =
-                    Alignment.CenterVertically
-            ) {
-
-                Image(
-                    painter = painterResource(
-                        R.drawable.ic_localizacao
-                    ),
-                    contentDescription =
-                        "Localização",
-                    modifier = Modifier.size(44.dp),
-                    contentScale = ContentScale.Fit
-                )
-
-                Spacer(Modifier.width(14.dp))
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    Text(
-                        text = "Sua localização",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AzulEscuro
-                    )
-
-                    Spacer(Modifier.height(3.dp))
-
-                    Text(
-                        text =
-                            "Poderá ser enviada junto com o pedido de ajuda.",
-                        fontSize = 12.sp,
-                        lineHeight = 18.sp,
-                        color = TextoSecundario
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(20.dp))
-
-        Text(
-            text =
-                "O acionamento real de chamadas, alertas e localização será conectado aos serviços do SeniorLink nas próximas etapas.",
-            modifier = Modifier.fillMaxWidth(),
-            fontSize = 12.sp,
-            lineHeight = 18.sp,
-            color = TextoSecundario,
-            textAlign = TextAlign.Center
-        )
 
         Spacer(Modifier.height(24.dp))
 
@@ -1212,13 +1463,12 @@ fun EmergenciaScreen(
     if (confirmar) {
 
         AlertDialog(
-            onDismissRequest = {
-                confirmar = false
-            },
+            onDismissRequest = { confirmar = false },
+            containerColor = Branco,
 
             title = {
                 Text(
-                    text = "Pedir ajuda?",
+                    text = "Confirmar pedido de ajuda?",
                     fontSize = 21.sp,
                     fontWeight = FontWeight.Bold,
                     color = Vermelho
@@ -1227,33 +1477,51 @@ fun EmergenciaScreen(
 
             text = {
                 Text(
-                    text =
-                        "Você está pedindo ajuda. " +
-                                "Quando os serviços estiverem conectados, " +
-                                "o SeniorLink poderá avisar seu contato de confiança."
+                    text = "Um alerta urgente será enviado imediatamente para o painel do seu responsável junto com sua localização em tempo real.",
+                    color = Texto,
+                    fontSize = 16.sp
                 )
             },
 
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         confirmar = false
-                    }
+                        alertaAtivo = true
+
+                        // Gravação forçada em Realtime Database para garantir envio ao responsável
+                        val emergencyData = mapOf(
+                            "idosoId" to idosoId,
+                            "nome" to nomeIdoso,
+                            "latitude" to (ultimaLoc?.latitude ?: 0.0),
+                            "longitude" to (ultimaLoc?.longitude ?: 0.0),
+                            "timestamp" to System.currentTimeMillis(),
+                            "status" to "ativo"
+                        )
+                        FirebaseDatabase.getInstance().getReference("emergencias").child(idosoId).setValue(emergencyData)
+                        FirebaseDatabase.getInstance().getReference("usuarios").child(idosoId).child("alertaAtivo").setValue(true)
+
+                        repo.dispararEmergencia(
+                            idosoId = idosoId,
+                            nomeIdoso = nomeIdoso,
+                            latitude = ultimaLoc?.latitude,
+                            longitude = ultimaLoc?.longitude
+                        ) {
+                            Toast.makeText(context, "Alerta urgente enviado!", Toast.LENGTH_LONG).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Vermelho)
                 ) {
                     Text(
-                        "Confirmar",
-                        color = Vermelho,
+                        "SIM, PEDIR AJUDA",
+                        color = Branco,
                         fontWeight = FontWeight.Bold
                     )
                 }
             },
 
             dismissButton = {
-                TextButton(
-                    onClick = {
-                        confirmar = false
-                    }
-                ) {
+                TextButton(onClick = { confirmar = false }) {
                     Text(
                         "Cancelar",
                         color = AzulPrincipal
@@ -1273,7 +1541,11 @@ fun EmergenciaScreen(
 private fun CabecalhoTela(
     titulo: String,
     subtitulo: String,
-    onVoltar: () -> Unit
+    onVoltar: () -> Unit,
+    escala: Float = 1.0f,
+    cardFundo: Color = Branco,
+    tituloCor: Color = AzulEscuro,
+    subtituloCor: Color = TextoSecundario
 ) {
 
     Row(
@@ -1285,7 +1557,7 @@ private fun CabecalhoTela(
             modifier = Modifier
                 .size(48.dp)
                 .background(
-                    Branco,
+                    cardFundo,
                     RoundedCornerShape(16.dp)
                 )
                 .clickable {
@@ -1312,18 +1584,18 @@ private fun CabecalhoTela(
 
             Text(
                 text = titulo,
-                fontSize = 28.sp,
+                fontSize = (28 * escala).sp,
                 fontWeight = FontWeight.Bold,
-                color = AzulEscuro
+                color = tituloCor
             )
 
             Spacer(Modifier.height(3.dp))
 
             Text(
                 text = subtitulo,
-                fontSize = 14.sp,
-                lineHeight = 19.sp,
-                color = TextoSecundario
+                fontSize = (14 * escala).sp,
+                lineHeight = (19 * escala).sp,
+                color = subtituloCor
             )
         }
     }
@@ -1337,6 +1609,9 @@ private fun CabecalhoTela(
 @Composable
 private fun CardSecao(
     titulo: String,
+    escala: Float = 1.0f,
+    cardFundo: Color = Branco,
+    tituloCor: Color = AzulEscuro,
     conteudo: @Composable () -> Unit
 ) {
 
@@ -1346,7 +1621,7 @@ private fun CardSecao(
             .padding(bottom = 12.dp),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Branco
+            containerColor = cardFundo
         )
     ) {
 
@@ -1357,9 +1632,9 @@ private fun CardSecao(
 
             Text(
                 text = titulo,
-                fontSize = 19.sp,
+                fontSize = (19 * escala).sp,
                 fontWeight = FontWeight.Bold,
-                color = AzulEscuro
+                color = tituloCor
             )
 
             conteudo()
@@ -1376,6 +1651,7 @@ private fun CardSecao(
 private fun Campo(
     titulo: String,
     valor: String,
+    escala: Float = 1.0f,
     aoAlterar: (String) -> Unit
 ) {
 
@@ -1384,8 +1660,9 @@ private fun Campo(
         onValueChange = aoAlterar,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
+        textStyle = LocalTextStyle.current.copy(fontSize = (16 * escala).sp),
         label = {
-            Text(titulo)
+            Text(titulo, fontSize = (14 * escala).sp)
         }
     )
 }
@@ -1428,7 +1705,9 @@ private fun LinhaInformacao(
 // ============================================================
 
 @Composable
-private fun RodapeTela() {
+private fun RodapeTela(
+    subtituloCor: Color = TextoSecundario
+) {
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1454,7 +1733,7 @@ private fun RodapeTela() {
         Text(
             text = "Cuidado, autonomia e conexão",
             fontSize = 11.sp,
-            color = TextoSecundario
+            color = subtituloCor
         )
 
         Spacer(Modifier.height(10.dp))

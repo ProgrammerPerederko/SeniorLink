@@ -1,6 +1,6 @@
-
 package com.seniorlink.app.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,12 +25,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.seniorlink.app.model.SeniorLinkPrefs
 
 
 // ============================================================
@@ -55,7 +57,6 @@ private val Verde = Color(0xFF079B91)
 private val VerdeClaro = Color(0xFFE8F7F5)
 
 private val Vermelho = Color(0xFFE94B4B)
-private val VermelhoClaro = Color(0xFFFFF0F0)
 
 private val Fundo = Color(0xFFF7F9FC)
 private val Branco = Color.White
@@ -360,414 +361,7 @@ fun NovoLembreteScreen(
 
 
 // ============================================================
-// CONTATOS DE CONFIANÇA
-// ============================================================
-
-@Composable
-fun ContatosConfiancaScreen(
-    onVoltar: () -> Unit
-) {
-
-    var nome by remember {
-        mutableStateOf("")
-    }
-
-    var telefone by remember {
-        mutableStateOf("")
-    }
-
-    var parentesco by remember {
-        mutableStateOf("")
-    }
-
-    val contatos =
-        remember {
-            mutableStateListOf<ContatoLocal>()
-        }
-
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Fundo)
-            .verticalScroll(
-                rememberScrollState()
-            )
-            .padding(
-                horizontal = 22.dp,
-                vertical = 24.dp
-            )
-    ) {
-
-        CabecalhoManagement(
-            titulo = "Meus contatos",
-            subtitulo =
-                "Pessoas que podem ajudar você.",
-            onVoltar = onVoltar
-        )
-
-
-        Spacer(
-            modifier = Modifier.height(22.dp)
-        )
-
-
-        // ====================================================
-        // NOVO CONTATO
-        // ====================================================
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Branco
-            )
-        ) {
-
-            Column(
-                modifier = Modifier.padding(18.dp),
-                verticalArrangement =
-                    Arrangement.spacedBy(10.dp)
-            ) {
-
-                Text(
-                    text = "Adicionar contato",
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = AzulEscuro
-                )
-
-
-                OutlinedTextField(
-                    value = nome,
-                    onValueChange = {
-                        nome = it
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = {
-                        Text("Nome")
-                    },
-                    placeholder = {
-                        Text("Ex.: João Silva")
-                    }
-                )
-
-
-                OutlinedTextField(
-                    value = parentesco,
-                    onValueChange = {
-                        parentesco = it
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = {
-                        Text("Relação")
-                    },
-                    placeholder = {
-                        Text("Ex.: Filho")
-                    }
-                )
-
-
-                OutlinedTextField(
-                    value = telefone,
-                    onValueChange = {
-                        telefone = it
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = {
-                        Text("Telefone")
-                    },
-                    placeholder = {
-                        Text("Ex.: (11) 99999-9999")
-                    }
-                )
-
-
-                Spacer(
-                    modifier = Modifier.height(4.dp)
-                )
-
-
-                Button(
-                    onClick = {
-
-                        if (
-                            nome.isNotBlank() &&
-                            telefone.isNotBlank()
-                        ) {
-
-                            contatos.add(
-                                ContatoLocal(
-                                    nome = nome,
-                                    telefone = telefone,
-                                    parentesco =
-                                        parentesco.ifBlank {
-                                            "Contato de confiança"
-                                        }
-                                )
-                            )
-
-                            nome = ""
-                            telefone = ""
-                            parentesco = ""
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Verde
-                    )
-                ) {
-
-                    Text(
-                        text = "Adicionar contato",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-
-        Spacer(
-            modifier = Modifier.height(24.dp)
-        )
-
-
-        // ====================================================
-        // LISTA
-        // ====================================================
-
-        Text(
-            text = "Pessoas cadastradas",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = AzulEscuro
-        )
-
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
-
-        if (contatos.isEmpty()) {
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = AzulClaro
-                )
-            ) {
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment =
-                        Alignment.CenterHorizontally
-                ) {
-
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(
-                                color = Branco,
-                                shape =
-                                    RoundedCornerShape(18.dp)
-                            ),
-                        contentAlignment =
-                            Alignment.Center
-                    ) {
-
-                        Text(
-                            text = "+",
-                            fontSize = 30.sp,
-                            color = AzulPrincipal
-                        )
-                    }
-
-
-                    Spacer(
-                        modifier = Modifier.height(12.dp)
-                    )
-
-
-                    Text(
-                        text =
-                            "Nenhum contato cadastrado",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = AzulEscuro
-                    )
-
-
-                    Spacer(
-                        modifier = Modifier.height(5.dp)
-                    )
-
-
-                    Text(
-                        text =
-                            "Adicione alguém de confiança para receber ajuda quando necessário.",
-                        modifier =
-                            Modifier.fillMaxWidth(),
-                        fontSize = 13.sp,
-                        lineHeight = 19.sp,
-                        color = TextoSecundario,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-        } else {
-
-            contatos.forEachIndexed { index, contato ->
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            bottom = 10.dp
-                        ),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Branco
-                    )
-                ) {
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment =
-                            Alignment.CenterVertically
-                    ) {
-
-                        Box(
-                            modifier = Modifier
-                                .size(54.dp)
-                                .background(
-                                    color = AzulClaro,
-                                    shape =
-                                        RoundedCornerShape(
-                                            18.dp
-                                        )
-                                ),
-                            contentAlignment =
-                                Alignment.Center
-                        ) {
-
-                            Text(
-                                text =
-                                    contato.nome
-                                        .first()
-                                        .uppercase(),
-                                fontSize = 22.sp,
-                                fontWeight =
-                                    FontWeight.Bold,
-                                color = AzulPrincipal
-                            )
-                        }
-
-
-                        Spacer(
-                            modifier = Modifier.width(14.dp)
-                        )
-
-
-                        Column(
-                            modifier =
-                                Modifier.weight(1f)
-                        ) {
-
-                            Text(
-                                text = contato.nome,
-                                fontSize = 17.sp,
-                                fontWeight =
-                                    FontWeight.Bold,
-                                color = AzulEscuro
-                            )
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(2.dp)
-                            )
-
-                            Text(
-                                text =
-                                    contato.parentesco,
-                                fontSize = 13.sp,
-                                color =
-                                    TextoSecundario
-                            )
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(2.dp)
-                            )
-
-                            Text(
-                                text =
-                                    contato.telefone,
-                                fontSize = 13.sp,
-                                color =
-                                    AzulPrincipal
-                            )
-                        }
-
-
-                        TextButton(
-                            onClick = {
-                                contatos.removeAt(index)
-                            }
-                        ) {
-
-                            Text(
-                                text = "Excluir",
-                                color = Vermelho,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
-
-
-        Text(
-            text =
-                "Depois vamos conectar estes contatos ao Firebase e ao botão de emergência.",
-            modifier = Modifier.fillMaxWidth(),
-            fontSize = 12.sp,
-            lineHeight = 18.sp,
-            color = TextoSecundario,
-            textAlign = TextAlign.Center
-        )
-
-
-        Spacer(
-            modifier = Modifier.height(22.dp)
-        )
-
-        RodapeManagement()
-    }
-}
-
-
-// ============================================================
-// CONFIGURAÇÕES
+// CONFIGURAÇÕES (ACESSIBILIDADE E PREFERÊNCIAS DO IDOSO)
 // ============================================================
 
 @Composable
@@ -778,13 +372,16 @@ fun ConfiguracoesSeniorLinkScreen(
     onTreinamentoResponsavel: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val escala = SeniorLinkPrefs.escalaFonte
+    val altoContraste = SeniorLinkPrefs.altoContraste
+
+    val fundoAtual = if (altoContraste) Color.Black else Fundo
+    val cardFundo = if (altoContraste) Color(0xFF1A1A1A) else Branco
+    val tituloAtual = if (altoContraste) Color.Yellow else AzulEscuro
+    val subtituloAtual = if (altoContraste) Color.White else TextoSecundario
 
     var notificacoes by remember {
         mutableStateOf(true)
-    }
-
-    var fonteMaior by remember {
-        mutableStateOf(false)
     }
 
     var mostrarSobre by remember {
@@ -795,7 +392,7 @@ fun ConfiguracoesSeniorLinkScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Fundo)
+            .background(fundoAtual)
             .verticalScroll(
                 rememberScrollState()
             )
@@ -808,7 +405,11 @@ fun ConfiguracoesSeniorLinkScreen(
         CabecalhoManagement(
             titulo = "Configurações",
             subtitulo = "Personalize o SeniorLink.",
-            onVoltar = onVoltar
+            onVoltar = onVoltar,
+            escala = escala,
+            cardFundo = cardFundo,
+            tituloCor = tituloAtual,
+            subtituloCor = subtituloAtual
         )
 
 
@@ -823,9 +424,9 @@ fun ConfiguracoesSeniorLinkScreen(
 
         Text(
             text = "Minha conta",
-            fontSize = 19.sp,
+            fontSize = (19 * escala).sp,
             fontWeight = FontWeight.Bold,
-            color = AzulEscuro
+            color = tituloAtual
         )
 
 
@@ -836,7 +437,11 @@ fun ConfiguracoesSeniorLinkScreen(
 
         ManagementOption(
             titulo = "Meu perfil",
-            subtitulo = "Dados e informações pessoais"
+            subtitulo = "Dados médicos e informações pessoais",
+            escala = escala,
+            cardFundo = cardFundo,
+            tituloCor = tituloAtual,
+            subtituloCor = subtituloAtual
         ) {
             onPerfil()
         }
@@ -844,7 +449,11 @@ fun ConfiguracoesSeniorLinkScreen(
 
         ManagementOption(
             titulo = "Contatos de confiança",
-            subtitulo = "Pessoas que podem ajudar"
+            subtitulo = "Pessoas que podem ajudar",
+            escala = escala,
+            cardFundo = cardFundo,
+            tituloCor = tituloAtual,
+            subtituloCor = subtituloAtual
         ) {
             onContatos()
         }
@@ -856,14 +465,14 @@ fun ConfiguracoesSeniorLinkScreen(
 
 
         // ====================================================
-        // PREFERÊNCIAS
+        // ACESSIBILIDADE E TAMANHO DA FONTE
         // ====================================================
 
         Text(
-            text = "Preferências",
-            fontSize = 19.sp,
+            text = "Tamanho da letra e visualização",
+            fontSize = (19 * escala).sp,
             fontWeight = FontWeight.Bold,
-            color = AzulEscuro
+            color = tituloAtual
         )
 
 
@@ -872,24 +481,105 @@ fun ConfiguracoesSeniorLinkScreen(
         )
 
 
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            color = cardFundo,
+            border = BorderStroke(1.dp, Borda)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Tamanho do texto",
+                    fontSize = (16 * escala).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = tituloAtual
+                )
+
+                Text(
+                    text = "Exemplo de como as letras ficam no aplicativo.",
+                    fontSize = (14 * escala).sp,
+                    color = subtituloAtual
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf(
+                        1.0f to "Normal",
+                        1.25f to "Grande",
+                        1.45f to "Extra"
+                    ).forEach { (valor, rotulo) ->
+                        val selecionado = SeniorLinkPrefs.escalaFonte == valor
+                        Button(
+                            onClick = { SeniorLinkPrefs.escalaFonte = valor },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selecionado) Verde else AzulClaro
+                            )
+                        ) {
+                            Text(
+                                text = rotulo,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (selecionado) Branco else AzulPrincipal
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+
+        Spacer(
+            modifier = Modifier.height(10.dp)
+        )
+
+
         SwitchOption(
-            titulo = "Notificações",
-            subtitulo =
-                "Receber alertas e lembretes",
-            valor = notificacoes,
+            titulo = "Modo alto contraste",
+            subtitulo = "Fundo escuro com letras amarelas para facilitar a leitura",
+            valor = SeniorLinkPrefs.altoContraste,
+            escala = escala,
+            cardFundo = cardFundo,
+            tituloCor = tituloAtual,
+            subtituloCor = subtituloAtual,
             onChange = {
-                notificacoes = it
+                SeniorLinkPrefs.altoContraste = it
             }
         )
 
 
         SwitchOption(
-            titulo = "Texto maior",
-            subtitulo =
-                "Aumentar o tamanho dos textos",
-            valor = fonteMaior,
+            titulo = "Leitura em voz alta",
+            subtitulo = "Falar os avisos e lembretes de remédios",
+            valor = SeniorLinkPrefs.leituraVozAtiva,
+            escala = escala,
+            cardFundo = cardFundo,
+            tituloCor = tituloAtual,
+            subtituloCor = subtituloAtual,
             onChange = {
-                fonteMaior = it
+                SeniorLinkPrefs.leituraVozAtiva = it
+            }
+        )
+
+
+        SwitchOption(
+            titulo = "Notificações",
+            subtitulo = "Receber alertas e lembretes",
+            valor = notificacoes,
+            escala = escala,
+            cardFundo = cardFundo,
+            tituloCor = tituloAtual,
+            subtituloCor = subtituloAtual,
+            onChange = {
+                notificacoes = it
             }
         )
 
@@ -905,9 +595,9 @@ fun ConfiguracoesSeniorLinkScreen(
 
         Text(
             text = "Ajuda",
-            fontSize = 19.sp,
+            fontSize = (19 * escala).sp,
             fontWeight = FontWeight.Bold,
-            color = AzulEscuro
+            color = tituloAtual
         )
 
 
@@ -918,8 +608,11 @@ fun ConfiguracoesSeniorLinkScreen(
 
         ManagementOption(
             titulo = "Treinamento do responsável",
-            subtitulo =
-                "Aprenda a acompanhar o idoso"
+            subtitulo = "Aprenda a acompanhar o idoso",
+            escala = escala,
+            cardFundo = cardFundo,
+            tituloCor = tituloAtual,
+            subtituloCor = subtituloAtual
         ) {
             onTreinamentoResponsavel()
         }
@@ -927,8 +620,11 @@ fun ConfiguracoesSeniorLinkScreen(
 
         ManagementOption(
             titulo = "Sobre o SeniorLink",
-            subtitulo =
-                "Informações sobre o aplicativo"
+            subtitulo = "Informações sobre o aplicativo",
+            escala = escala,
+            cardFundo = cardFundo,
+            tituloCor = tituloAtual,
+            subtituloCor = subtituloAtual
         ) {
             mostrarSobre = true
         }
@@ -948,13 +644,14 @@ fun ConfiguracoesSeniorLinkScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(54.dp),
-            shape = RoundedCornerShape(18.dp)
+            shape = RoundedCornerShape(18.dp),
+            border = BorderStroke(1.5.dp, Vermelho)
         ) {
 
             Text(
                 text = "Sair da conta",
                 color = Vermelho,
-                fontSize = 16.sp,
+                fontSize = (16 * escala).sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -964,7 +661,7 @@ fun ConfiguracoesSeniorLinkScreen(
             modifier = Modifier.height(22.dp)
         )
 
-        RodapeManagement()
+        RodapeManagement(subtituloCor = subtituloAtual)
     }
 
 
@@ -1186,7 +883,11 @@ fun TreinamentoResponsavelScreen(
 private fun CabecalhoManagement(
     titulo: String,
     subtitulo: String,
-    onVoltar: () -> Unit
+    onVoltar: () -> Unit,
+    escala: Float = 1.0f,
+    cardFundo: Color = Branco,
+    tituloCor: Color = AzulEscuro,
+    subtituloCor: Color = TextoSecundario
 ) {
 
     Row(
@@ -1198,7 +899,7 @@ private fun CabecalhoManagement(
             modifier = Modifier
                 .size(48.dp)
                 .background(
-                    color = Branco,
+                    color = cardFundo,
                     shape = RoundedCornerShape(16.dp)
                 )
                 .clickable {
@@ -1226,9 +927,9 @@ private fun CabecalhoManagement(
 
             Text(
                 text = titulo,
-                fontSize = 28.sp,
+                fontSize = (28 * escala).sp,
                 fontWeight = FontWeight.Bold,
-                color = AzulEscuro
+                color = tituloCor
             )
 
             Spacer(
@@ -1237,8 +938,8 @@ private fun CabecalhoManagement(
 
             Text(
                 text = subtitulo,
-                fontSize = 14.sp,
-                color = TextoSecundario
+                fontSize = (14 * escala).sp,
+                color = subtituloCor
             )
         }
     }
@@ -1253,6 +954,10 @@ private fun CabecalhoManagement(
 private fun ManagementOption(
     titulo: String,
     subtitulo: String,
+    escala: Float = 1.0f,
+    cardFundo: Color = Branco,
+    tituloCor: Color = AzulEscuro,
+    subtituloCor: Color = TextoSecundario,
     onClick: () -> Unit
 ) {
 
@@ -1263,7 +968,7 @@ private fun ManagementOption(
                 vertical = 5.dp
             )
             .background(
-                color = Branco,
+                color = cardFundo,
                 shape = RoundedCornerShape(18.dp)
             )
             .clickable {
@@ -1302,9 +1007,9 @@ private fun ManagementOption(
 
             Text(
                 text = titulo,
-                fontSize = 16.sp,
+                fontSize = (16 * escala).sp,
                 fontWeight = FontWeight.Bold,
-                color = AzulEscuro
+                color = tituloCor
             )
 
             Spacer(
@@ -1313,8 +1018,8 @@ private fun ManagementOption(
 
             Text(
                 text = subtitulo,
-                fontSize = 12.sp,
-                color = TextoSecundario
+                fontSize = (12 * escala).sp,
+                color = subtituloCor
             )
         }
 
@@ -1337,6 +1042,10 @@ private fun SwitchOption(
     titulo: String,
     subtitulo: String,
     valor: Boolean,
+    escala: Float = 1.0f,
+    cardFundo: Color = Branco,
+    tituloCor: Color = AzulEscuro,
+    subtituloCor: Color = TextoSecundario,
     onChange: (Boolean) -> Unit
 ) {
 
@@ -1344,7 +1053,7 @@ private fun SwitchOption(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Branco,
+                color = cardFundo,
                 shape = RoundedCornerShape(18.dp)
             )
             .padding(16.dp),
@@ -1357,9 +1066,9 @@ private fun SwitchOption(
 
             Text(
                 text = titulo,
-                fontSize = 16.sp,
+                fontSize = (16 * escala).sp,
                 fontWeight = FontWeight.Bold,
-                color = AzulEscuro
+                color = tituloCor
             )
 
             Spacer(
@@ -1368,15 +1077,19 @@ private fun SwitchOption(
 
             Text(
                 text = subtitulo,
-                fontSize = 12.sp,
-                color = TextoSecundario
+                fontSize = (12 * escala).sp,
+                color = subtituloCor
             )
         }
 
 
         Switch(
             checked = valor,
-            onCheckedChange = onChange
+            onCheckedChange = onChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Branco,
+                checkedTrackColor = Verde
+            )
         )
     }
 
@@ -1388,22 +1101,13 @@ private fun SwitchOption(
 
 
 // ============================================================
-// CONTATO LOCAL
-// ============================================================
-
-private data class ContatoLocal(
-    val nome: String,
-    val telefone: String,
-    val parentesco: String
-)
-
-
-// ============================================================
 // RODAPÉ
 // ============================================================
 
 @Composable
-private fun RodapeManagement() {
+private fun RodapeManagement(
+    subtituloCor: Color = TextoSecundario
+) {
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1433,7 +1137,7 @@ private fun RodapeManagement() {
         Text(
             text = "Cuidado, autonomia e conexão",
             fontSize = 11.sp,
-            color = TextoSecundario
+            color = subtituloCor
         )
 
         Spacer(
