@@ -4,7 +4,7 @@
 
 O SeniorLink usa uma arquitetura simples em camadas, ainda em evolução:
 
-`@text
+```text
 Compose UI
    ↓
 ViewModel / estado da tela
@@ -12,13 +12,13 @@ ViewModel / estado da tela
 Repository
    ↓
 Firebase / serviços do Android
-`@
+```
 
 O objetivo é manter a UI sem conhecimento desnecessário dos detalhes do Firebase e do provedor de localização.
 
 ## Estrutura principal
 
-`@text
+```text
 app/src/main/java/com/seniorlink/app/
 ├── MainActivity.kt
 ├── auth/
@@ -35,7 +35,7 @@ app/src/main/java/com/seniorlink/app/
     ├── components/
     ├── screens/
     └── theme/
-`@
+```
 
 ## Autenticação
 
@@ -88,9 +88,9 @@ A estrutura dos nós está em [11 — Modelo do Firebase](11-modelo-firebase.md)
 
 Em produção, a referência é:
 
-`@text
+```text
 localizacoes/{auth.uid}
-`@
+```
 
 No debug, o código atual aceita o `id_idoso` salvo localmente para manter o fluxo de teste por PIN funcionando.
 
@@ -100,9 +100,9 @@ Essa compatibilidade deve desaparecer quando o Idoso passar a possuir uma identi
 
 O painel do responsável lê diretamente:
 
-`@text
+```text
 localizacoes/{idosoId}
-`@
+```
 
 Isso corrige a divergência anterior em que o produtor gravava em `localizacoes` enquanto a tela tentava ler em `usuarios/{id}/localizacao`.
 
@@ -110,16 +110,16 @@ Isso corrige a divergência anterior em que o produtor gravava em `localizacoes`
 
 O evento de emergência usa:
 
-`@text
+```text
 emergencias/{idosoId}
 usuarios/{idosoId}/emergencia_ativa
-`@
+```
 
 A localização continua centralizada em:
 
-`@text
+```text
 localizacoes/{idosoId}
-`@
+```
 
 ## Segurança
 
@@ -127,7 +127,7 @@ A autorização deve ser imposta no Firebase Realtime Database Rules.
 
 Modelo esperado:
 
-`@text
+```text
 auth.uid
    ↓
 perfil autenticado
@@ -139,7 +139,7 @@ idoso
    ├── lembretes
    ├── contatos
    └── emergências
-`@
+```
 
 Nunca confiar exclusivamente em:
 
