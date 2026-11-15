@@ -1,91 +1,86 @@
-# Documentação do SeniorLink
+`# Documentação do SeniorLink
 
 Esta pasta é a fonte de verdade do projeto.
 
-## Como usar
+A regra principal é simples: **a documentação deve descrever o que o código realmente faz hoje**. Recursos planejados, mas não implementados, devem ficar identificados como pendentes.
 
-Antes de implementar uma funcionalidade, consulte:
+## Ordem recomendada de leitura
 
-1. `01-visao-produto.md` para entender o problema.
-2. `02-estado-atual.md` para saber o que realmente existe.
-3. `03-arquitetura.md` para respeitar a estrutura técnica.
-4. `05-requisitos-funcionais.md` para validar o comportamento esperado.
-5. `06-roadmap.md` para saber a próxima prioridade.
+1. `01-visao-produto.md` — problema, público e objetivo.
+2. `02-estado-atual.md` — estado real do aplicativo.
+3. `03-arquitetura.md` — organização técnica.
+4. `04-mapa-de-telas.md` — fluxos e navegação.
+5. `05-requisitos-funcionais.md` — requisitos do produto.
+6. `11-modelo-firebase.md` — estrutura dos dados remotos.
+7. `12-auditoria-seguranca.md` — riscos, correções e pendências.
+8. `06-roadmap.md` — sequência de entrega.
+9. `08-decisoes-tecnicas.md` — decisões arquiteturais.
+10. `07-plano-de-testes.md` — critérios de validação.
+11. `09-diario-de-desenvolvimento.md` — histórico das mudanças.
+12. `10-backlog-atual.md` — tarefas abertas.
 
-Depois de implementar:
+## Mapa dos principais arquivos de código
 
-- atualizar o estado atual;
-- marcar o requisito como feito;
-- registrar testes;
-- registrar decisões novas no documento de decisões;
-- adicionar uma entrada no diário de desenvolvimento.
+| Arquivo | Responsabilidade |
+|---|---|
+| `MainActivity.kt` | Navegação raiz e seleção das telas |
+| `auth/AuthRepository.kt` | Login, cadastro, Google, recuperação de senha e logout |
+| `auth/AuthViewModel.kt` | Estado das operações de autenticação |
+| `data/FirestoreRepository.kt` | Acesso ao Firebase Realtime Database; nome histórico |
+| `location/LocationRepository.kt` | Captura e publicação da localização |
+| `ui/screens/AccessScreens.kt` | Login e cadastro |
+| `ui/screens/FeatureScreens.kt` | Perfil, localização, lembretes, emergência e outras funções |
+| `ui/screens/ResponsavelScreens.kt` | Painel e gestão do responsável |
+| `app/google-services.json` | Configuração do projeto Firebase |
+| `local.defaults.properties` | Fallback não secreto para o Maps |
+| `secrets.properties` | Chaves locais; não versionar |
 
-A documentação deve descrever o que o código realmente faz, não apenas o que pretendemos fazer.
+## Firebase
 
-COMO USAR O CODIGO:
+O projeto utiliza Firebase Authentication e Firebase Realtime Database.
 
-1. Pré-requisitos de Instalação
+A estrutura dos nós e os caminhos esperados estão documentados em [11 — Modelo do Firebase](11-modelo-firebase.md).
 
-Certifique-se de ter as seguintes ferramentas instaladas na sua máquina antes de abrir o projeto:
+As Security Rules **não são substituídas pela lógica do Android**. Qualquer acesso a dados sensíveis deve ser autorizado no backend.
 
-Android Studio (versão mais recente recomendada, ex: Iguana, Jellyfish ou Ladybug).
+## Configuração local
 
-Java Development Kit (JDK 17 ou superior) (geralmente já embutido no Android Studio).
+Pré-requisitos principais:
 
-Android SDK (API mínima compatível: 24 | SDK Alvo: API 34+).
+- Android Studio atual;
+- JDK 17;
+- Android SDK compatível com compileSdk 37;
+- `app/google-services.json` do projeto SeniorLink;
+- `secrets.properties` local contendo a chave real do Maps.
 
-2. Clonando o Repositório
+O repositório oficial é:
 
-Abra o seu terminal (ou Git Bash) e clone o repositório oficial:
-
-git clone https://github.com/SEU_USUARIO/SeniorLink.git
+```text
+git clone https://github.com/ProgrammerPerederko/SeniorLink.git
 cd SeniorLink
+```
 
+Depois, abra a pasta raiz no Android Studio.
 
-3. Configuração Crucial: Firebase (google-services.json)
+## Checklist antes de executar
 
-O aplicativo utiliza Firebase Realtime Database, Firestore e Firebase Auth para sincronização em tempo real e autenticação.
+- [ ] `app/google-services.json` está presente.
+- [ ] `secrets.properties` existe localmente.
+- [ ] `MAPS_API_KEY` está configurada localmente.
+- [ ] dispositivo/emulador está disponível.
+- [ ] permissão de localização pode ser concedida durante o teste.
 
-Como o arquivo de chaves google-services.json contém dados sensíveis da API do Google, ele pode não estar exposto publicamente no repositório principal.
+## Checklist depois de implementar uma mudança
 
-Solicite o arquivo google-services.json atualizado com o líder do projeto ou acesse o console do Firebase do SeniorLink.
-
-Cole o arquivo na pasta correta do projeto local:
-app/google-services.json
-
-Atenção: Se esse arquivo não estiver na pasta app/, o projeto apresentará erros de compilação relacionados aos serviços do Google.
-
-4. Abrindo e Executando no Android Studio
-
-Abra o Android Studio.
-
-Selecione Open (Abrir) e navegue até a pasta raiz do projeto SeniorLink.
-
-Aguarde o Gradle sincronizar todas as dependências automaticamente (pode levar alguns minutos na primeira vez).
-
-Caso ocorra algum erro de dependência, clique em File > Sync Project with Gradle Files ou execute um Clean Project seguido de Rebuild Project.
-
-Conecte um dispositivo físico via USB (com a Depuração USB ativada) ou abra um Emulador Android (AVD) com API 30 ou superior.
-
-Clique no botão de Play (Run 'app') verde na barra superior.
-
-5. Arquitetura e Correções Recentes Implementadas
-
-Para quem for continuar o desenvolvimento ou correções:
-
-Gerenciamento de Estado de Telas (MainActivity): Utiliza rememberSaveable para evitar que o app volte para a tela inicial ao girar o dispositivo.
-
-Sistema de Alarmes e Emergências (AlarmeDisparoEmergenciaActivity & AlertaBackgroundService):
-
-O serviço em segundo plano monitora o Realtime Database com controle rigoroso de transição de estado (!ultimoEstado), eliminando loops infinitos.
-
-O alarme possui timeout de segurança de 3 minutos e encerra automaticamente ao receber o sinal de resolução.
-
-Painel do Responsável (PainelResponsavelScreen): Conta com monitoramento em tempo real de múltiplos idosos vinculados e botão instantâneo de "PARAR ALARME" sincronizado globalmente.
-
+1. corrigir ou adicionar o código;
+2. testar o fluxo;
+3. atualizar `02-estado-atual.md`;
+4. atualizar `05-requisitos-funcionais.md` quando um requisito mudar de estado;
+5. registrar decisões em `08-decisoes-tecnicas.md`;
+6. registrar a mudança em `09-diario-de-desenvolvimento.md`;
+7. atualizar `11-modelo-firebase.md` quando a estrutura remota mudar;
+8. revisar `12-auditoria-seguranca.md` quando houver impacto de segurança.
 
 ## Segurança
 
-A revisão de segurança mais recente está em [12 — Auditoria de segurança](12-auditoria-seguranca.md).
-
-Antes de mexer em autenticação, localização, banco, permissões ou dados pessoais, consulte essa auditoria e as pendências registradas.
+Leia [12 — Auditoria de segurança](12-auditoria-seguranca.md) antes de alterar autenticação, localização, banco, permissões, backup ou dados pessoais.

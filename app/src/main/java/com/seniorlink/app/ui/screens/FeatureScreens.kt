@@ -367,7 +367,13 @@ fun LocalizacaoScreen(
     idosoId: String = ""
 ) {
     val context = LocalContext.current
-    val locationRepository = remember { LocationRepository(context) }
+    val prefs = remember { context.getSharedPreferences("seniorlink_prefs", Context.MODE_PRIVATE) }
+    val idosoIdLocal = remember {
+        prefs.getString("id_idoso", "")?.trim().orEmpty()
+    }
+    val locationRepository = remember(idosoIdLocal) {
+        LocationRepository(context, legacyUserId = idosoIdLocal)
+    }
 
     var localizacaoLocal by remember { mutableStateOf<Location?>(null) }
     var latRemota by remember { mutableStateOf<Double?>(null) }
@@ -381,14 +387,13 @@ fun LocalizacaoScreen(
     // MODO RESPONSÁVEL: Escuta a localização do idoso no Firebase Realtime Database
     DisposableEffect(idosoId) {
         if (idosoId.isNotBlank()) {
-            val ref = FirebaseDatabase.getInstance().getReference("usuarios").child(idosoId)
+            val ref = FirebaseDatabase.getInstance().getReference("localizacoes").child(idosoId)
             val listener = object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     nomeIdosoRemoto = snapshot.child("nome").getValue(String::class.java) ?: "Idoso"
-                    val locSnap = snapshot.child("localizacao")
-                    val lat = locSnap.child("latitude").getValue(Double::class.java)
-                    val lng = locSnap.child("longitude").getValue(Double::class.java)
-                    val prec = locSnap.child("precisao").getValue(Double::class.java)?.toFloat()
+                    val lat = snapshot.child("latitude").getValue(Double::class.java)
+                    val lng = snapshot.child("longitude").getValue(Double::class.java)
+                    val prec = snapshot.child("precisao").getValue(Double::class.java)?.toFloat()
 
                     if (lat != null && lng != null) {
                         latRemota = lat
@@ -1270,7 +1275,12 @@ fun EmergenciaScreen(
     }
 
     val repo = remember { FirestoreRepository() }
-    val locationRepo = remember { LocationRepository(context) }
+    val idosoIdLocal = remember {
+        prefs.getString("id_idoso", "")?.trim().orEmpty()
+    }
+    val locationRepo = remember(idosoIdLocal) {
+        LocationRepository(context, legacyUserId = idosoIdLocal)
+    }
 
     var confirmar by remember { mutableStateOf(false) }
     var alertaAtivo by remember { mutableStateOf(false) }
@@ -1295,11 +1305,11 @@ fun EmergenciaScreen(
                         "precisao" to loc.accuracy.toDouble(),
                         "atualizadoEm" to System.currentTimeMillis()
                     )
-                    // Atualiza Realtime Database diretamente para entrega imediata ao responsável
+                    // A localização segue o mesmo caminho usado por LocationRepository:
+                    // localizacoes/{idosoId}.
                     FirebaseDatabase.getInstance()
-                        .getReference("usuarios")
+                        .getReference("localizacoes")
                         .child(idosoId)
-                        .child("localizacao")
                         .setValue(dadosLoc)
 
                     FirebaseDatabase.getInstance()

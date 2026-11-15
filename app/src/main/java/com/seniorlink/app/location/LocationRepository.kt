@@ -14,8 +14,16 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.seniorlink.app.BuildConfig
 
+/**
+ * Responsável pela captura e publicação da localização do dispositivo.
+ *
+ * Em produção, a publicação remota usa exclusivamente o UID do Firebase Auth.
+ * Em debug, o ID do idoso salvo localmente pode ser usado para testar o fluxo
+ * atual por PIN antes da migração definitiva para autenticação Firebase.
+ */
 class LocationRepository(
-    context: Context
+    context: Context,
+    private val legacyUserId: String? = null
 ) {
 
     companion object {
@@ -32,7 +40,12 @@ class LocationRepository(
         FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
             database.getReference("localizacoes").child(uid)
         } ?: if (BuildConfig.DEBUG) {
-            database.getReference("localizacoes").child("idoso_teste")
+            val debugId = legacyUserId
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?: "idoso_teste"
+
+            database.getReference("localizacoes").child(debugId)
         } else {
             null
         }

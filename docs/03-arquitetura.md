@@ -1,22 +1,24 @@
-# 03 — Arquitetura
+`# 03 — Arquitetura
 
 ## Visão atual
 
-A arquitetura atual está em transição entre uma base de telas Compose centralizada e uma estrutura com autenticação e repositórios.
+O SeniorLink usa uma arquitetura simples em camadas, ainda em evolução:
 
-```
-UI
- ↓
-ViewModel
- ↓
+```text
+Compose UI
+   ↓
+ViewModel / estado da tela
+   ↓
 Repository
- ↓
-Firebase / serviços externos
+   ↓
+Firebase / serviços do Android
 ```
 
-## Estrutura
+O objetivo é manter a UI sem conhecimento desnecessário dos detalhes do Firebase e do provedor de localização.
 
-```
+## Estrutura principal
+
+```text
 app/src/main/java/com/seniorlink/app/
 ├── MainActivity.kt
 ├── auth/
@@ -27,6 +29,7 @@ app/src/main/java/com/seniorlink/app/
 ├── location/
 │   └── LocationRepository.kt
 ├── alarm/
+├── services/
 ├── model/
 └── ui/
     ├── components/
@@ -36,49 +39,112 @@ app/src/main/java/com/seniorlink/app/
 
 ## Autenticação
 
-Firebase Authentication é a autoridade de identidade para contas autenticadas.
+`AuthRepository` é a camada de acesso ao Firebase Authentication.
 
-A UI ainda permite selecionar o perfil de acesso no fluxo de entrada. Isso é apenas navegação e não pode ser tratado como mecanismo de segurança.
+Responsabilidades:
 
-## Dados remotos
+- login por e-mail/senha;
+- cadastro;
+- Google Sign-In;
+- recuperação de senha;
+- logout.
 
-O arquivo `FirestoreRepository.kt` atualmente utiliza Firebase Realtime Database apesar do nome. Isso é uma dívida técnica de nomenclatura.
+`AuthViewModel` expõe o estado de carregamento e mensagens de erro para a UI.
+
+### Limitação atual
+
+A seleção visual de perfil ocorre na UI.
+
+Ela define o fluxo de navegação, mas **não é autorização**.
+
+O backend deve validar a identidade e o relacionamento do usuário.
+
+## Realtime Database
+
+O arquivo `data/FirestoreRepository.kt` possui nome histórico, mas usa exclusivamente Firebase Realtime Database.
+
+Principais responsabilidades:
+
+- consultas de idosos;
+- atualização de ficha;
+- lembretes;
+- contatos;
+- ranking;
+- emergências.
+
+A estrutura dos nós está em [11 — Modelo do Firebase](11-modelo-firebase.md).
 
 ## Localização
 
-`LocationRepository`:
+`LocationRepository` concentra:
 
-- usa Fused Location Provider;
-- atualiza a posição periodicamente;
-- usa o UID autenticado como caminho em produção;
-- mantém `idoso_teste` somente para debug;
-- não grava diagnóstico em produção;
-- limita logs detalhados de localização ao debug.
+- `FusedLocationProviderClient`;
+- atualização periódica;
+- última posição disponível;
+- publicação no Realtime Database;
+- diagnóstico de debug.
+
+### Regra de identidade
+
+Em produção, a referência é:
+
+```text
+localizacoes/{auth.uid}
+```
+
+No debug, o código atual aceita o `id_idoso` salvo localmente para manter o fluxo de teste por PIN funcionando.
+
+Essa compatibilidade deve desaparecer quando o Idoso passar a possuir uma identidade Firebase própria.
+
+## Localização do Responsável
+
+O painel do responsável lê diretamente:
+
+```text
+localizacoes/{idosoId}
+```
+
+Isso corrige a divergência anterior em que o produtor gravava em `localizacoes` enquanto a tela tentava ler em `usuarios/{id}/localizacao`.
+
+## Emergência
+
+O evento de emergência usa:
+
+```text
+emergencias/{idosoId}
+usuarios/{idosoId}/emergencia_ativa
+```
+
+A localização continua centralizada em:
+
+```text
+localizacoes/{idosoId}
+```
 
 ## Segurança
 
-A autorização final deve acontecer no Firebase Security Rules.
+A autorização deve ser imposta no Firebase Realtime Database Rules.
 
-Modelo desejado:
+Modelo esperado:
 
-```
+```text
 auth.uid
-  ↓
+   ↓
 perfil autenticado
-  ↓
+   ↓
 vínculo autorizado
-  ↓
+   ↓
 idoso
-  ├── localização
-  ├── lembretes
-  ├── contatos
-  └── emergências
+   ├── localização
+   ├── lembretes
+   ├── contatos
+   └── emergências
 ```
 
-Nunca confiar apenas em:
+Nunca confiar exclusivamente em:
 
 - botão da UI;
-- rota da `MainActivity`;
+- rota;
+- e-mail enviado pelo cliente;
 - `idosoId` enviado pela tela;
-- e-mail enviado pelo cliente.
-
+- campo de perfil escolhido localmente.
