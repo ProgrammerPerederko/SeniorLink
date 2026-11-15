@@ -64,8 +64,6 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 
 firebase-database = { group = "com.google.firebase", name = "firebase-database" }
 
-firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
-
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
