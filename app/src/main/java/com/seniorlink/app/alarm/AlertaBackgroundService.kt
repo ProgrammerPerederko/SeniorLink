@@ -20,6 +20,7 @@ import com.seniorlink.app.alarm.AlarmeDisparoEmergenciaActivity
 class AlertaBackgroundService : Service() {
     private val db = FirebaseDatabase.getInstance()
     private val activeListeners = mutableListOf<Pair<com.google.firebase.database.DatabaseReference, ValueEventListener>>()
+    private var monitoramentoIniciado = false
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         criarCanalNotificacao()
@@ -39,7 +40,11 @@ class AlertaBackgroundService : Service() {
             .build()
 
         startForeground(1, notification)
-        observarEmergenciasGlobalmente()
+
+        if (!monitoramentoIniciado) {
+            monitoramentoIniciado = true
+            observarEmergenciasGlobalmente()
+        }
 
         return START_STICKY
     }
@@ -132,6 +137,8 @@ class AlertaBackgroundService : Service() {
         activeListeners.forEach { (ref, listener) ->
             ref.removeEventListener(listener)
         }
+        activeListeners.clear()
+        monitoramentoIniciado = false
         super.onDestroy()
     }
 }
