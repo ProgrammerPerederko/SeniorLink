@@ -51,6 +51,8 @@ class MainActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
 
+        com.seniorlink.app.model.SeniorLinkPrefs.inicializar(applicationContext)
+
         val abrirOnboarding = intent.getBooleanExtra("abrir_onboarding", false)
         val abrirLogin = intent.getBooleanExtra("abrir_login", false)
         val abrirInicio = intent.getBooleanExtra("abrir_inicio", false)
