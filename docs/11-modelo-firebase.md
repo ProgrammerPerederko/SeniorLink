@@ -23,7 +23,7 @@ O fluxo do Idoso ainda utiliza um PIN consultado no Realtime Database. Esse flux
 
 ## 2. Estrutura atual do Realtime Database
 
-`@text
+```text
 usuarios/
 └── {idosoId}/
     ├── nome
@@ -56,7 +56,7 @@ usuarios/
         ├── latitude
         ├── longitude
         └── timestamp
-`@
+```
 
 ### Observações sobre `usuarios/{idosoId}`
 
@@ -68,22 +68,22 @@ O campo `pin` ainda existe porque o login do idoso depende dele. Ele não deve s
 
 ## 3. Localização
 
-`@text
+```text
 localizacoes/
 └── {identificador}/
     ├── latitude
     ├── longitude
     ├── precisao
     └── timestamp
-`@
+```
 
 ### Regra de escrita implementada no aplicativo
 
 Em produção:
 
-`@text
+```text
 localizacoes/{auth.uid}
-`@
+```
 
 O código utiliza o UID da sessão autenticada.
 
@@ -91,15 +91,15 @@ Em debug, quando o fluxo atual do idoso ainda não possui Firebase Authenticatio
 
 Somente quando esse ID local não existir o debug cai para:
 
-`@text
+```text
 localizacoes/idoso_teste
-`@
+```
 
 Essa compatibilidade existe exclusivamente para testes e deve ser retirada quando o login do idoso for migrado para uma identidade Firebase.
 
 ## 4. Emergências
 
-`@text
+```text
 emergencias/
 └── {idosoId}/
     ├── ativo
@@ -108,25 +108,25 @@ emergencias/
     ├── latitude
     ├── longitude
     └── timestamp
-`@
+```
 
 O aplicativo também mantém um espelho em:
 
-`@text
+```text
 usuarios/{idosoId}/emergencia_ativa/
-`@
+```
 
 Isso atende às rotinas atuais que escutam o estado de emergência em mais de um ponto do aplicativo.
 
 ## 5. Ranking
 
-`@text
+```text
 ranking_idosos/
 └── {uid}/
     ├── nome
     ├── avatar
     └── pontos
-`@
+```
 
 O ranking usa o UID da conta autenticada quando disponível.
 
@@ -134,12 +134,12 @@ O ranking usa o UID da conta autenticada quando disponível.
 
 Durante debug:
 
-`@text
+```text
 diagnostico/
 └── localizacao/
     ├── status
     └── timestamp
-`@
+```
 
 A gravação diagnóstica é bloqueada pelo código em builds que não são de debug.
 
@@ -147,7 +147,7 @@ A gravação diagnóstica é bloqueada pelo código em builds que não são de d
 
 O modelo de autorização que deve ser implementado nas Security Rules é:
 
-`@text
+```text
 auth.uid
    │
    ├── próprio perfil
@@ -159,7 +159,7 @@ auth.uid
                ├── lembretes
                ├── contatos
                └── emergência
-`@
+```
 
 A UI, o e-mail informado pelo cliente e o `idosoId` recebido por uma tela **não são suficientes para autorizar acesso**.
 
