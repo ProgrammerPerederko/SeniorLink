@@ -55,10 +55,10 @@ Pré-requisitos principais:
 
 O repositório oficial é:
 
-`@text
+```text
 git clone https://github.com/ProgrammerPerederko/SeniorLink.git
 cd SeniorLink
-`@
+```
 
 Depois, abra a pasta raiz no Android Studio.
 
