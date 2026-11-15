@@ -1,141 +1,109 @@
-`# 02 — Estado atual
+# 02 — Estado atual
 
-> Revisão da base do repositório e das integrações em 15/11/2026.
+> Revisão técnica em 15/11/2026.
 
-## 1. Plataforma
+## Plataforma
 
-O SeniorLink é um aplicativo Android em Kotlin + Jetpack Compose.
+- Android;
+- Kotlin 2.4.21;
+- Jetpack Compose;
+- Android Gradle Plugin 9.3.1;
+- Gradle 9.6.0;
+- Java/JVM 17;
+- minSdk 24;
+- compileSdk 37;
+- targetSdk 37.
 
-A `MainActivity` concentra a navegação atual e ainda existem Activities/recursos XML específicos para alarmes e compatibilidade.
+## Fluxo ativo
 
-### Configuração atual
+O launcher atual é `MainActivity`.
 
-| Item | Valor |
-|---|---|
-| namespace | `com.seniorlink.app` |
-| applicationId | `com.seniorlink.app` |
-| minSdk | 24 |
-| compileSdk | 37 |
-| targetSdk | 37 |
-| Kotlin | 2.4.21 |
-| Android Gradle Plugin | 9.3.1 |
-| Gradle | 9.6.0 |
-| Compose BOM | 2026.02.01 |
-| Java/JVM | 17 |
+O onboarding ativo é `ui/screens/SplashScreen.kt`, implementado com Compose `HorizontalPager`.
 
-## 2. Autenticação
+O projeto ainda contém Activities/XML antigos de onboarding, mas eles não estão declarados no `AndroidManifest.xml` e não participam do launcher. São legado.
 
-O Firebase Authentication está integrado para:
+## Autenticação
 
-- login por e-mail e senha;
-- cadastro por e-mail e senha;
+Firebase Authentication está integrado para:
+
+- e-mail e senha;
+- cadastro;
 - recuperação de senha;
-- login com Google;
+- Google Sign-In;
 - logout.
 
-### Exceção atual: Idoso
+O Idoso ainda possui um fluxo legado por PIN no Realtime Database.
 
-O Idoso ainda utiliza um PIN de quatro dígitos consultado no Realtime Database.
+## Banco
 
-Esse fluxo funciona como compatibilidade com o protótipo atual, mas **não representa a autenticação definitiva**.
+O banco operacional é somente o Firebase Realtime Database.
 
-## 3. Realtime Database
+O Cloud Firestore foi removido das dependências e do armazenamento do perfil.
 
-O Realtime Database é usado para:
+## Perfil
 
-- perfis;
-- vínculo atual do responsável com idosos;
-- lembretes;
-- contatos;
-- ranking;
-- localização;
-- emergências.
+`model/IdosoState.kt` concentra:
 
-O modelo completo está documentado em [11 — Modelo do Firebase](11-modelo-firebase.md).
+- estado do perfil;
+- preferências de acessibilidade;
+- persistência das preferências;
+- leitura e gravação do perfil em `usuarios/{idosoId}` no Realtime Database.
 
-## 4. Localização
+As preferências de fonte, contraste e leitura de voz agora são persistidas localmente.
+
+## Localização
 
 `LocationRepository` usa `FusedLocationProviderClient`.
 
-### Produção
+Em produção autenticada:
 
-Quando existe sessão Firebase autenticada:
+`localizacoes/{auth.uid}`
 
-```text
-localizacoes/{auth.uid}
-```
+Em debug, o fluxo legado do Idoso pode usar o `id_idoso` salvo localmente; `idoso_teste` permanece somente como fallback.
 
-### Debug
+A Home e a tela dedicada de localização utilizam o mesmo repositório e o mesmo caminho do Firebase.
 
-Quando o fluxo atual do idoso ainda não possui Firebase Authentication, o aplicativo pode usar o `id_idoso` salvo em `SharedPreferences` para testar o caminho:
+## Lembretes
 
-```text
-localizacoes/{id_idoso}
-```
+Os lembretes ficam em:
 
-Se não existir esse identificador, o fallback é:
+`usuarios/{idosoId}/lembretes/{lembreteId}`
 
-```text
-localizacoes/idoso_teste
-```
+O agendamento local também carrega o `idosoId`. Assim, a tela de alarme consegue marcar o registro correto como concluído.
 
-Esse fallback é exclusivo para debug.
+## Emergência
 
-## 5. Google Maps
+Os alertas são registrados em:
 
-A tela de localização utiliza Google Maps Compose e apresenta:
+- `emergencias/{idosoId}`;
+- `usuarios/{idosoId}/emergencia_ativa`.
 
-- marcador da posição atual;
-- atualização de câmera;
-- controles de zoom;
-- leitura de precisão;
-- status de rastreamento.
+A localização usada no alerta segue `localizacoes/{idosoId}`.
 
-A chave real deve ficar em `secrets.properties`.
+O serviço em segundo plano agora impede inicialização duplicada de listeners durante múltiplas chamadas de `onStartCommand`.
 
-## 6. Emergência
+## Segurança
 
-O fluxo de emergência registra o evento em:
+Correções relevantes desta revisão:
 
-```text
-emergencias/{idosoId}
-```
+- perfil migrado de Firestore para Realtime Database;
+- dependência do Firestore removida;
+- localização da Home alinhada ao `LocationRepository`;
+- alarmes vinculados ao `idosoId`;
+- listeners duplicados do serviço reduzidos;
+- preferências locais persistidas;
+- documentação do Firebase consolidada.
 
-e também mantém um espelho em:
+## Pendências
 
-```text
-usuarios/{idosoId}/emergencia_ativa
-```
+Ainda são necessárias:
 
-A localização usada pelo painel é padronizada em:
-
-```text
-localizacoes/{idosoId}
-```
-
-## 7. Correções aplicadas nesta revisão
-
-- corrigida a referência a um campo `pin` que havia sido removido do modelo de perfil;
-- corrigido o caminho de leitura da localização do painel do responsável;
-- corrigido o caminho da localização usado pelo fluxo de emergência;
-- evitado o uso do identificador artificial `__unauthenticated__` nas gravações do repositório;
-- consulta de idosos do responsável filtrada no Realtime Database pelo e-mail autenticado;
-- validações adicionais para operações que exigem sessão autenticada;
-- documentação do modelo Firebase criada e vinculada ao projeto.
-
-## 8. Segurança ainda pendente
-
-1. revogar/rotacionar a chave do Maps exposta no histórico;
-2. revisar e versionar as Security Rules;
-3. criar vínculo Responsável → Idoso por UID;
-4. criar vínculo Cuidador → Idoso por UID;
-5. retirar o PIN do documento remoto;
-6. substituir o login do idoso por autenticação apropriada;
-7. remover `idoso_teste`;
-8. revisar todos os acessos que recebem `idosoId` da UI;
-9. executar testes reais de acesso cruzado;
-10. definir retenção de dados de localização.
-
-## Regra de segurança
-
-A tela, a rota da `MainActivity`, o e-mail recebido pela UI e o `idosoId` não substituem as Security Rules.
+1. Security Rules;
+2. vínculo Responsável → Idoso por UID;
+3. vínculo Cuidador → Idoso por UID;
+4. autenticação definitiva do Idoso;
+5. remoção do PIN remoto;
+6. remoção de `idoso_teste`;
+7. testes de acesso cruzado;
+8. rotação da chave do Maps exposta no histórico;
+9. política de retenção de localização.
