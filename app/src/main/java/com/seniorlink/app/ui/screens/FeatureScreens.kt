@@ -367,7 +367,13 @@ fun LocalizacaoScreen(
     idosoId: String = ""
 ) {
     val context = LocalContext.current
-    val locationRepository = remember { LocationRepository(context) }
+    val prefs = remember { context.getSharedPreferences("seniorlink_prefs", Context.MODE_PRIVATE) }
+    val idosoIdLocal = remember {
+        prefs.getString("id_idoso", "")?.trim().orEmpty()
+    }
+    val locationRepository = remember(idosoIdLocal) {
+        LocationRepository(context, legacyUserId = idosoIdLocal)
+    }
 
     var localizacaoLocal by remember { mutableStateOf<Location?>(null) }
     var latRemota by remember { mutableStateOf<Double?>(null) }
@@ -1269,7 +1275,12 @@ fun EmergenciaScreen(
     }
 
     val repo = remember { FirestoreRepository() }
-    val locationRepo = remember { LocationRepository(context) }
+    val idosoIdLocal = remember {
+        prefs.getString("id_idoso", "")?.trim().orEmpty()
+    }
+    val locationRepo = remember(idosoIdLocal) {
+        LocationRepository(context, legacyUserId = idosoIdLocal)
+    }
 
     var confirmar by remember { mutableStateOf(false) }
     var alertaAtivo by remember { mutableStateOf(false) }
