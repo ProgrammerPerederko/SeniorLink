@@ -16,7 +16,14 @@ import com.seniorlink.app.R
 import java.util.Calendar
 
 object LembreteScheduler {
-    fun agendarLembrete(context: Context, id: String, titulo: String, horario: String, categoria: String) {
+    fun agendarLembrete(
+        context: Context,
+        id: String,
+        titulo: String,
+        horario: String,
+        categoria: String,
+        idosoId: String
+    ) {
         val partes = horario.split(":")
         if (partes.size != 2) return
         val hora = partes[0].toIntOrNull() ?: return
@@ -36,6 +43,7 @@ object LembreteScheduler {
             putExtra("TITULO", titulo)
             putExtra("CATEGORIA", categoria)
             putExtra("HORARIO", horario)
+            putExtra("IDOSO_ID", idosoId)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
