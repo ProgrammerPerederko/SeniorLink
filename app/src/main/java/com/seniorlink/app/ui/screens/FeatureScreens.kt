@@ -120,7 +120,7 @@ private val Borda = Color(0xFFE1E8EF)
 
 
 // ============================================================
-// PERFIL DO IDOSO (INTEGRADO COM FIRESTORE E PREFERÊNCIAS)
+// PERFIL DO IDOSO (INTEGRADO COM REALTIME DATABASE E PREFERÊNCIAS)
 // ============================================================
 
 @Composable
@@ -148,8 +148,16 @@ fun PerfilScreen(
     var salvando by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "idoso_teste"
-        SeniorLinkPrefs.carregarPerfilDoFirestore(uid)
+        val idLocal = context.getSharedPreferences("seniorlink_prefs", Context.MODE_PRIVATE)
+            .getString("id_idoso", "")
+            ?.trim()
+            .orEmpty()
+
+        val uid = idLocal.ifBlank {
+            FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
+        }
+
+        SeniorLinkPrefs.carregarPerfilDoRealtimeDatabase(uid)
     }
 
     Column(
@@ -248,7 +256,15 @@ fun PerfilScreen(
         Button(
             onClick = {
                 salvando = true
-                val uid = FirebaseAuth.getInstance().currentUser?.uid ?: "idoso_teste"
+                val idLocal = context.getSharedPreferences("seniorlink_prefs", Context.MODE_PRIVATE)
+                    .getString("id_idoso", "")
+                    ?.trim()
+                    .orEmpty()
+
+                val uid = idLocal.ifBlank {
+                    FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
+                }
+
                 val novoPerfil = perfilSalvo.copy(
                     uid = uid,
                     nome = nome.trim(),
@@ -259,7 +275,7 @@ fun PerfilScreen(
                     contatoEmergencia = contatoEmergencia.trim(),
                     endereco = endereco.trim()
                 )
-                SeniorLinkPrefs.salvarPerfilNoFirestore(
+                SeniorLinkPrefs.salvarPerfilNoRealtimeDatabase(
                     perfil = novoPerfil,
                     onSuccess = {
                         salvando = false
@@ -725,7 +741,14 @@ fun LembretesScreen(
         if (idosoId.isBlank()) {
             lembretes.forEach { item ->
                 if (!item.concluido) {
-                    LembreteScheduler.agendarLembrete(context, item.id, item.titulo, item.horario, item.categoria)
+                    LembreteScheduler.agendarLembrete(
+                        context = context,
+                        id = item.id,
+                        titulo = item.titulo,
+                        horario = item.horario,
+                        categoria = item.categoria,
+                        idosoId = idAlvo
+                    )
                 } else {
                     LembreteScheduler.cancelarLembrete(context, item.id)
                 }
