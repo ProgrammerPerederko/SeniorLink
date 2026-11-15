@@ -35,7 +35,6 @@ data class ContatoFirestore(
 data class PerfilVinculadoFirestore(
     val id: String = "",
     val nome: String = "",
-    val pin: String = "",
     val email: String = "",
     val telefone: String = "",
     val tipo: String = "",
@@ -54,10 +53,10 @@ class FirestoreRepository {
     private val auth = FirebaseAuth.getInstance()
 
     private val uidAtual: String
-        get() = auth.currentUser?.uid ?: "idoso_demo"
+        get() = auth.currentUser?.uid ?: "__unauthenticated__"
 
     private val nomeAtual: String
-        get() = auth.currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "Maria"
+        get() = auth.currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "Usuário"
 
     // ============================================================
     // VALIDAÇÃO DE PIN ÚNICO E LOGIN DO IDOSO
@@ -159,7 +158,6 @@ class FirestoreRepository {
         return PerfilVinculadoFirestore(
             id = doc.key ?: "",
             nome = doc.child("nome").getValue(String::class.java) ?: "",
-            pin = doc.child("pin").getValue(String::class.java) ?: "",
             email = doc.child("emailResponsavel").getValue(String::class.java) ?: "",
             telefone = doc.child("telefone").getValue(String::class.java) ?: "",
             tipo = "idoso",

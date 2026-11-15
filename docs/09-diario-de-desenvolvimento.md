@@ -2,43 +2,36 @@
 
 ## 07/10/2026 — Documentação incorporada ao projeto
 
+A documentação foi criada dentro do repositório para acompanhar o desenvolvimento.
+
+## 15/11/2026 — Revisão de segurança
+
 ### Objetivo
-Fazer a documentação acompanhar o código dentro do próprio repositório.
 
-### Ações
-- criada a pasta `docs/`;
-- registrada a visão do produto;
-- registrado o estado real do código;
-- registrado o mapa de telas;
-- registrados requisitos;
-- criado roadmap;
-- criado plano de testes;
-- criadas decisões técnicas.
+Revisar o código publicado e corrigir riscos que podiam ser tratados diretamente no aplicativo sem alterar ainda as Security Rules do Firebase.
 
-### Próximo ciclo
-Consolidar as interfaces restantes e iniciar a implementação funcional por prioridade.
+### Alterações
 
-## Regra para cada novo ciclo
+- removida a chave real do Maps do `local.defaults.properties`;
+- reforçado o `.gitignore`;
+- removido armazenamento local do PIN;
+- desabilitado backup automático das SharedPreferences;
+- limitado logs detalhados de localização ao debug;
+- limitado gravação diagnóstica ao debug;
+- localização autenticada passou a utilizar UID;
+- `idoso_teste` ficou restrito ao debug;
+- documentação atualizada com as pendências de autorização.
 
-Registrar:
-- data;
-- objetivo;
-- arquivos alterados;
-- implementação realizada;
-- testes executados;
-- problemas encontrados;
-- decisão tomada;
-- próximo passo.
+### Pendências
 
----
+- rotação da chave exposta no histórico;
+- Security Rules;
+- vínculo entre perfis;
+- autenticação segura do idoso;
+- remoção do PIN do banco;
+- revisão de acessos por `idosoId`.
 
-## Modelo de entrada
+### Próximo passo
 
-### AAAA-MM-DD — Nome da entrega
-**Objetivo:**  
-**Alterações:**  
-**Arquivos:**  
-**Testes:**  
-**Resultado:**  
-**Pendências:**  
-**Próximo passo:**
+Fazer a camada de segurança do Firebase e testar acesso cruzado entre contas.
+

@@ -8,9 +8,15 @@ O SeniorLink combina localização, ficha de informações importantes, lembrete
 
 ## Estado atual
 
-Esta branch contém a base do projeto Android desenvolvido em Kotlin + Jetpack Compose, com Splash, onboarding, Home e telas de Perfil, Localização, Lembretes, Aprender e Emergência.
+A base atual utiliza Kotlin + Jetpack Compose, Firebase Authentication, Firebase Realtime Database, localização do dispositivo e integração inicial com Google Maps.
 
-A documentação do projeto fica dentro de `docs/` e deve ser atualizada junto com o código.
+Existem fluxos distintos para:
+
+- Idoso
+- Responsável
+- Cuidador
+
+A documentação do projeto fica dentro de `docs/` e deve acompanhar o código.
 
 ## Documentação
 
@@ -23,10 +29,30 @@ A documentação do projeto fica dentro de `docs/` e deve ser atualizada junto c
 - [Plano de testes](docs/07-plano-de-testes.md)
 - [Decisões técnicas](docs/08-decisoes-tecnicas.md)
 - [Diário de desenvolvimento](docs/09-diario-de-desenvolvimento.md)
+- [Backlog atual](docs/10-backlog-atual.md)
+- [Auditoria de segurança](docs/12-auditoria-seguranca.md)
+
+## Configuração de segurança
+
+A chave real do Google Maps deve ficar somente em:
+
+```
+secrets.properties
+```
+
+Esse arquivo não deve ser versionado.
+
+O arquivo versionado `local.defaults.properties` contém apenas:
+
+```properties
+MAPS_API_KEY=DEFAULT_API_KEY
+```
+
+Uma chave real do Maps foi encontrada anteriormente nesse arquivo e deve ser considerada exposta. Ela precisa ser revogada/rotacionada no Google Cloud. Remover o valor do arquivo atual não apaga a exposição do histórico do Git.
 
 ## Regra de trabalho
 
-Toda nova funcionalidade deve passar por este ciclo:
+Toda nova funcionalidade deve passar pelo ciclo:
 
 `Entender problema → documentar decisão → implementar → testar → atualizar documentação → registrar mudança`.
 
@@ -36,8 +62,14 @@ Toda nova funcionalidade deve passar por este ciclo:
 - Jetpack Compose
 - Android Gradle Plugin
 - Gradle Version Catalog
-- Android SDK
-- AppCompat para as Activities XML existentes
+- Java/JVM 17
+- Firebase Authentication
+- Firebase Realtime Database
+- Firebase Firestore
+- Firebase Cloud Messaging
+- Firebase Storage
+- Google Maps Compose
+- Google Play Services Location
 
 ## Repositório
 

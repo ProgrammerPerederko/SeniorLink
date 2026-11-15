@@ -1,40 +1,59 @@
 # 08 — Decisões técnicas
 
-## ADR-001 — Manter a base atual
+## ADR-001 — Evolução incremental
 
-**Decisão:** não reescrever o aplicativo inteiro.
+**Decisão:** manter a base atual e evoluir por etapas.
 
-**Motivo:** a base atual já possui identidade visual, onboarding, Home e componentes Compose. Vamos evoluir em incrementos.
+## ADR-002 — Documentação versionada
 
-## ADR-002 — Documentação dentro do repositório
+**Decisão:** manter a documentação técnica e de produto em `docs/`.
 
-**Decisão:** a documentação técnica e de produto fica em `docs/`.
+## ADR-003 — Firebase como base atual
 
-**Motivo:** o código e a documentação precisam evoluir juntos e permanecer versionados.
+**Decisão:** utilizar Firebase Authentication e Realtime Database na fase atual.
 
-## ADR-003 — MVP local antes do backend
+## ADR-004 — Segurança por camadas
 
-**Decisão:** implementar primeiro persistência e funcionalidades locais.
+**Decisão:** localização, dados médicos e contatos são tratados como dados sensíveis.
 
-**Motivo:** permite validar a experiência no aparelho antes de introduzir servidor e sincronização.
+## ADR-005 — Segredos fora do código
 
-## ADR-004 — Não considerar interface como funcionalidade concluída
+**Decisão:** chave real do Maps fica somente em `secrets.properties`.
 
-**Decisão:** uma tela só passa para concluída depois de comportamento e teste.
+**Resultado:** `local.defaults.properties` agora contém somente fallback.
 
-**Motivo:** evita confundir protótipo visual com produto funcional.
+**Pendência:** a chave que já esteve no histórico precisa ser rotacionada/revogada.
 
-## ADR-005 — Segurança por camadas
+## ADR-006 — UI não é autorização
 
-**Decisão:** localização, dados médicos e contatos devem ser tratados como dados sensíveis.
+**Decisão:** seleção de perfil e rotas no Android não são mecanismos de segurança.
 
-**Motivo:** o produto envolve segurança de pessoas e informações pessoais.
+**Motivo:** qualquer cliente potencialmente controlado pelo usuário pode alterar o fluxo local.
 
-## Próximas decisões a registrar
+## ADR-007 — UID como identidade remota
 
-- tecnologia do backend;
-- estratégia de autenticação;
-- banco de dados;
-- mecanismo de sincronização;
+**Decisão:** quando houver usuário autenticado, dados de localização devem ser armazenados sob o UID.
+
+**Motivo:** reduz o risco de usar um identificador fixo compartilhado.
+
+## ADR-008 — Debug separado de produção
+
+**Decisão:** caminhos e diagnósticos de teste só podem ser usados no debug.
+
+**Resultado:** `idoso_teste`, diagnósticos e logs detalhados foram limitados ao modo debug na camada de localização.
+
+## ADR-009 — Backup de preferências
+
+**Decisão:** não fazer backup automático das SharedPreferences do aplicativo.
+
+**Motivo:** as preferências podem conter identificadores e dados relacionados à sessão.
+
+## Pendências
+
+- Security Rules por UID;
+- vínculo Responsável ↔ Idoso;
+- autorização de Cuidador;
+- estratégia segura para autenticação do Idoso;
+- remoção do PIN do banco;
 - política de retenção de localização;
-- modelo de autorização do responsável.
+- auditoria de acessos.

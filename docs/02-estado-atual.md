@@ -1,65 +1,76 @@
 # 02 — Estado atual
 
-> Levantamento da base existente no repositório `main` em 07/10/2026.
+> Revisão da base do repositório em 15/11/2026.
 
 ## Estrutura atual
 
-O projeto é um aplicativo Android em Kotlin + Jetpack Compose, com algumas Activities e layouts XML usados pelo fluxo de Splash/Onboarding.
+Aplicativo Android em Kotlin + Jetpack Compose, com uma `MainActivity` centralizando o fluxo atual e Activities/layouts XML legados ainda presentes no projeto.
 
-## Configuração observada
+## Configuração
 
 - namespace/applicationId: `com.seniorlink.app`
 - minSdk: 24
 - targetSdk: 37
 - compileSdk: 37
-- Kotlin: 2.2.10
-- Android Gradle Plugin: 9.4.1
+- Kotlin: 2.4.21
+- Android Gradle Plugin: 9.3.1
+- Gradle: 9.6.0
 - Compose BOM: 2026.02.01
-- Java source/target: 11
+- Java/JVM: 17
 
-## Entrada do aplicativo
+## Integrações
 
-O Manifest atual define `SplashActivity` como launcher.
+### Firebase Authentication
 
-A `MainActivity` é aberta como Activity interna após o fluxo inicial.
+O projeto possui:
 
-## Telas existentes na base
+- login por e-mail e senha;
+- cadastro por e-mail e senha;
+- recuperação de senha;
+- login com Google;
+- logout.
 
-- Splash XML
-- Onboarding 2 XML
-- Onboarding 3 XML
-- Onboarding 4 XML
-- SplashScreen Compose
-- HomeScreen Compose
-- PerfilScreen Compose
-- LocalizacaoScreen Compose
-- LembretesScreen Compose
-- AprenderScreen Compose
-- EmergenciaScreen Compose
+### Realtime Database
 
-## O que está pronto como interface
+O projeto utiliza o Realtime Database para usuários, lembretes, contatos, ranking, localização e emergências.
 
-A base já apresenta visual do SeniorLink, Home com cartões de acesso, navegação entre Home e telas secundárias, onboarding visual e componentes Compose reutilizáveis.
+### Localização
 
-## O que ainda é protótipo
+`LocationRepository` usa `FusedLocationProviderClient`.
 
-As telas de Perfil, Localização, Lembretes e Emergência ainda contêm comportamentos demonstrativos. O código atual dessas telas inclui textos que explicitam que persistência, GPS, notificações e chamadas reais ainda não estão implementados.
+Em debug, o projeto ainda possui o caminho de teste `localizacoes/idoso_teste` para preservar os testes atuais.
 
-A Home também possui saudação fixa com o nome Maria.
+Em build de produção, a localização só é persistida quando existe um usuário autenticado, usando o UID como identificador.
 
-## Lacunas prioritárias
+### Google Maps
 
-1. Login e cadastro.
-2. Persistência de perfil.
-3. Localização real e compartilhamento com responsável.
-4. Lembretes persistentes e notificações.
-5. Emergência e ligação rápida.
-6. Contatos de confiança.
-7. Configurações e acessibilidade.
-8. Treinamento do responsável.
-9. Sincronização entre aparelhos.
-10. Backend/autenticação para uma versão conectada.
+A tela de localização utiliza Google Maps Compose com marcador e atualização de câmera.
+
+## Correções de segurança aplicadas nesta revisão
+
+- chave real removida de `local.defaults.properties`;
+- proteção adicional para arquivos de credenciais no `.gitignore`;
+- PIN removido do armazenamento em `SharedPreferences`;
+- backup automático de `SharedPreferences` desabilitado;
+- logs detalhados de coordenadas limitados ao modo debug;
+- gravação diagnóstica do Firebase limitada ao modo debug;
+- localização de produção vinculada ao UID autenticado.
+
+## Pendências de segurança
+
+Ainda são necessárias:
+
+1. rotação da chave do Maps exposta no histórico;
+2. Security Rules do Realtime Database por `auth.uid`;
+3. modelo de vínculo Responsável ↔ Idoso;
+4. autorização específica do Cuidador;
+5. substituição do login do idoso por PIN consultável diretamente no banco;
+6. remoção do PIN armazenado no próprio registro do usuário;
+7. remoção definitiva de `idoso_teste` quando o fluxo autenticado estiver concluído;
+8. revisão de todos os acessos que recebem `idosoId` da UI;
+9. revisão de backup e permissões para a versão final;
+10. testes de acesso entre contas.
 
 ## Regra
 
-Não marcar uma funcionalidade como concluída apenas porque existe uma tela. Ela só será considerada concluída quando existir comportamento testado e documentado.
+Interface não é autorização. A decisão final de acesso deve estar nas regras do backend.

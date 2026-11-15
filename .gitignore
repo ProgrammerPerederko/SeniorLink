@@ -9,3 +9,10 @@
 .cxx
 local.properties
 /secrets.properties
+
+# Credenciais e certificados locais
+.env
+*.keystore
+*.jks
+*.p12
+*.pem
