@@ -82,3 +82,10 @@ O serviço em segundo plano monitora o Realtime Database com controle rigoroso d
 O alarme possui timeout de segurança de 3 minutos e encerra automaticamente ao receber o sinal de resolução.
 
 Painel do Responsável (PainelResponsavelScreen): Conta com monitoramento em tempo real de múltiplos idosos vinculados e botão instantâneo de "PARAR ALARME" sincronizado globalmente.
+
+
+## Segurança
+
+A revisão de segurança mais recente está em [12 — Auditoria de segurança](12-auditoria-seguranca.md).
+
+Antes de mexer em autenticação, localização, banco, permissões ou dados pessoais, consulte essa auditoria e as pendências registradas.

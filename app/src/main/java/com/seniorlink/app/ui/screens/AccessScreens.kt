@@ -244,7 +244,6 @@ fun LoginSeniorLinkScreen(
                                         prefs.edit {
                                             putString("id_idoso", idosoEncontrado.id)
                                             putString("nome_idoso", idosoEncontrado.nome)
-                                            putString("pin_idoso", idosoEncontrado.pin)
                                             putString("email_responsavel", idosoEncontrado.email)
                                         }
                                         Toast.makeText(context, "Bem-vindo(a), ${idosoEncontrado.nome}!", Toast.LENGTH_SHORT).show()
@@ -654,7 +653,6 @@ fun CadastroSeniorLinkScreen(
                                                 prefs.edit {
                                                     putString("id_idoso", ref.key ?: "")
                                                     putString("nome_idoso", nome)
-                                                    putString("pin_idoso", pin)
                                                     putString("email_responsavel", emailResponsavel)
                                                 }
                                                 Toast.makeText(context, "Cadastro realizado! Seu responsável completará sua ficha.", Toast.LENGTH_LONG).show()

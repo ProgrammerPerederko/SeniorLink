@@ -10,7 +10,9 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.seniorlink.app.BuildConfig
 
 class LocationRepository(
     context: Context
@@ -26,10 +28,14 @@ class LocationRepository(
     private val database =
         FirebaseDatabase.getInstance()
 
-    private val locationRef =
-        database
-            .getReference("localizacoes")
-            .child("idoso_teste")
+    private fun locationRef() =
+        FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
+            database.getReference("localizacoes").child(uid)
+        } ?: if (BuildConfig.DEBUG) {
+            database.getReference("localizacoes").child("idoso_teste")
+        } else {
+            null
+        }
 
     private val diagnosticRef =
         database
@@ -57,11 +63,9 @@ class LocationRepository(
                     result.lastLocation
                         ?: return
 
-                Log.d(
-                    TAG,
-                    "Localização recebida: " +
-                            "${location.latitude}, ${location.longitude}"
-                )
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, "Localização recebida")
+                }
 
                 salvarLocalizacao(location)
 
@@ -158,22 +162,17 @@ class LocationRepository(
             "timestamp" to System.currentTimeMillis()
         )
 
+        if (!BuildConfig.DEBUG) {
+            return
+        }
+
         diagnosticRef
             .setValue(dados)
             .addOnSuccessListener {
-
-                Log.d(
-                    TAG,
-                    "Firebase conectado e gravação de teste realizada"
-                )
+                Log.d(TAG, "Firebase conectado e gravação de teste realizada")
             }
             .addOnFailureListener { erro ->
-
-                Log.e(
-                    TAG,
-                    "ERRO AO GRAVAR NO FIREBASE",
-                    erro
-                )
+                Log.e(TAG, "ERRO AO GRAVAR NO FIREBASE", erro)
             }
     }
 
@@ -188,22 +187,17 @@ class LocationRepository(
             "timestamp" to System.currentTimeMillis()
         )
 
-        locationRef
+        val ref = locationRef() ?: return
+
+        ref
             .setValue(dados)
             .addOnSuccessListener {
-
-                Log.d(
-                    TAG,
-                    "Localização salva no Firebase"
-                )
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, "Localização salva no Firebase")
+                }
             }
             .addOnFailureListener { erro ->
-
-                Log.e(
-                    TAG,
-                    "ERRO AO SALVAR LOCALIZAÇÃO NO FIREBASE",
-                    erro
-                )
+                Log.e(TAG, "ERRO AO SALVAR LOCALIZAÇÃO NO FIREBASE", erro)
             }
     }
 }

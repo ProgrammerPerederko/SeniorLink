@@ -2,61 +2,7 @@
 
 ## Visão atual
 
-A arquitetura atual é baseada em uma Activity principal com Compose e uma pequena camada de Activities XML para o fluxo de entrada.
-
-### Fluxo atual
-
-`SplashActivity → Onboarding 2 → Onboarding 3 → Onboarding 4 → MainActivity`
-
-A `MainActivity` mantém um estado simples de tela e direciona para as telas Compose.
-
-## Estrutura
-
-```
-app/src/main/java/com/seniorlink/app/
-├── MainActivity.kt
-├── SplashActivity.kt
-├── activity_onboarding2.kt
-├── activity_onboarding3.kt
-├── activity_onboarding4.kt
-└── ui/
-    ├── components/
-    ├── screens/
-    └── theme/
-```
-
-## Papel dos principais arquivos
-
-### MainActivity
-
-Controla a tela atual do fluxo Compose e encaminha destinos como:
-
-- inicio
-- perfil
-- localizacao
-- lembretes
-- aprender
-- emergencia
-
-### SplashActivity e onboarding
-
-São responsáveis pelo fluxo visual inicial e pela transição para a Home.
-
-### ui/screens
-
-Concentra as telas de interface.
-
-### ui/components
-
-Concentra componentes reutilizáveis.
-
-### ui/theme
-
-Concentra cores, tipografia e tema.
-
-## Arquitetura desejada para a próxima fase
-
-Evoluir gradualmente para:
+A arquitetura atual está em transição entre uma base de telas Compose centralizada e uma estrutura com autenticação e repositórios.
 
 ```
 UI
@@ -65,27 +11,74 @@ ViewModel
  ↓
 Repository
  ↓
-Local data / Remote data
- ↓
-Backend e serviços externos
+Firebase / serviços externos
 ```
 
-A migração deve ser incremental. Não reescrever o projeto inteiro de uma vez.
+## Estrutura
 
-## Dados
+```
+app/src/main/java/com/seniorlink/app/
+├── MainActivity.kt
+├── auth/
+│   ├── AuthRepository.kt
+│   └── AuthViewModel.kt
+├── data/
+│   └── FirestoreRepository.kt
+├── location/
+│   └── LocationRepository.kt
+├── alarm/
+├── model/
+└── ui/
+    ├── components/
+    ├── screens/
+    └── theme/
+```
 
-### Primeira fase
+## Autenticação
 
-Persistência local no aparelho.
+Firebase Authentication é a autoridade de identidade para contas autenticadas.
 
-### Segunda fase
+A UI ainda permite selecionar o perfil de acesso no fluxo de entrada. Isso é apenas navegação e não pode ser tratado como mecanismo de segurança.
 
-Backend e autenticação.
+## Dados remotos
 
-### Terceira fase
+O arquivo `FirestoreRepository.kt` atualmente utiliza Firebase Realtime Database apesar do nome. Isso é uma dívida técnica de nomenclatura.
 
-Sincronização entre idoso e responsável.
+## Localização
+
+`LocationRepository`:
+
+- usa Fused Location Provider;
+- atualiza a posição periodicamente;
+- usa o UID autenticado como caminho em produção;
+- mantém `idoso_teste` somente para debug;
+- não grava diagnóstico em produção;
+- limita logs detalhados de localização ao debug.
 
 ## Segurança
 
-Dados médicos, contatos e localização são informações sensíveis. A implementação futura deve restringir acesso e transmissão.
+A autorização final deve acontecer no Firebase Security Rules.
+
+Modelo desejado:
+
+```
+auth.uid
+  ↓
+perfil autenticado
+  ↓
+vínculo autorizado
+  ↓
+idoso
+  ├── localização
+  ├── lembretes
+  ├── contatos
+  └── emergências
+```
+
+Nunca confiar apenas em:
+
+- botão da UI;
+- rota da `MainActivity`;
+- `idosoId` enviado pela tela;
+- e-mail enviado pelo cliente.
+
