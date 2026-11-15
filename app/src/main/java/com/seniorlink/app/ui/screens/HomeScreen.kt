@@ -67,7 +67,6 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("seniorlink_prefs", Context.MODE_PRIVATE) }
-    val locationRepo = remember { LocationRepository(context) }
 
     val escala = SeniorLinkPrefs.escalaFonte
     val altoContraste = SeniorLinkPrefs.altoContraste
@@ -94,6 +93,10 @@ fun HomeScreen(
             ?: ""
     }
 
+    val locationRepo = remember(idosoId) {
+        LocationRepository(context, legacyUserId = idosoId)
+    }
+
     var nomeRealIdoso by remember { mutableStateOf("Carregando...") }
     LaunchedEffect(idosoId) {
         if (idosoId.isNotBlank()) {
@@ -118,19 +121,7 @@ fun HomeScreen(
 
     fun iniciarEnvioLocalizacao() {
         if (idosoId.isBlank()) return
-        locationRepo.iniciarAtualizacao { loc ->
-            val dadosLoc = mapOf(
-                "latitude" to loc.latitude,
-                "longitude" to loc.longitude,
-                "precisao" to loc.accuracy.toDouble(),
-                "atualizadoEm" to System.currentTimeMillis()
-            )
-            FirebaseDatabase.getInstance()
-                .getReference("usuarios")
-                .child(idosoId)
-                .child("localizacao")
-                .setValue(dadosLoc)
-        }
+        locationRepo.iniciarAtualizacao { }
     }
 
     val permissaoGpsLauncher = rememberLauncherForActivityResult(
@@ -148,7 +139,7 @@ fun HomeScreen(
 
     LaunchedEffect(idosoId) {
         val uid = idosoId.ifBlank { "idoso_teste" }
-        SeniorLinkPrefs.carregarPerfilDoFirestore(uid)
+        SeniorLinkPrefs.carregarPerfilDoRealtimeDatabase(uid)
 
         val temFina = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val temAproximada = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
