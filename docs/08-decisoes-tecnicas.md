@@ -8,52 +8,63 @@
 
 **Decisão:** manter a documentação técnica e de produto em `docs/`.
 
-## ADR-003 — Firebase como base atual
+## ADR-003 — Realtime Database como backend atual
 
-**Decisão:** utilizar Firebase Authentication e Realtime Database na fase atual.
+**Decisão:** utilizar Firebase Authentication + Firebase Realtime Database.
+
+**Motivo:** os fluxos de localização, lembretes, contatos e emergência já utilizam o Realtime Database.
+
+**Resultado:** a persistência do perfil foi alinhada ao mesmo banco e a dependência do Cloud Firestore foi removida.
 
 ## ADR-004 — Segurança por camadas
 
-**Decisão:** localização, dados médicos e contatos são tratados como dados sensíveis.
+**Decisão:** localização, dados médicos, contatos e emergência são dados sensíveis.
+
+A UI nunca deve ser tratada como autorização.
 
 ## ADR-005 — Segredos fora do código
 
-**Decisão:** chave real do Maps fica somente em `secrets.properties`.
+**Decisão:** a chave real do Maps fica somente em `secrets.properties`.
 
-**Resultado:** `local.defaults.properties` agora contém somente fallback.
-
-**Pendência:** a chave que já esteve no histórico precisa ser rotacionada/revogada.
+**Pendência:** a chave anteriormente exposta no histórico precisa ser revogada/rotacionada.
 
 ## ADR-006 — UI não é autorização
 
-**Decisão:** seleção de perfil e rotas no Android não são mecanismos de segurança.
+A seleção de perfil e as rotas da `MainActivity` controlam experiência, não segurança.
 
-**Motivo:** qualquer cliente potencialmente controlado pelo usuário pode alterar o fluxo local.
+A autorização definitiva deverá ficar no backend.
 
-## ADR-007 — UID como identidade remota
+## ADR-007 — UID para identidade autenticada
 
-**Decisão:** quando houver usuário autenticado, dados de localização devem ser armazenados sob o UID.
+Quando houver Firebase Authentication, o UID é a identidade remota preferencial.
 
-**Motivo:** reduz o risco de usar um identificador fixo compartilhado.
+A localização autenticada usa `localizacoes/{auth.uid}`.
 
 ## ADR-008 — Debug separado de produção
 
-**Decisão:** caminhos e diagnósticos de teste só podem ser usados no debug.
+`idoso_teste`, diagnóstico detalhado e logs de coordenadas detalhados são restritos ao debug.
 
-**Resultado:** `idoso_teste`, diagnósticos e logs detalhados foram limitados ao modo debug na camada de localização.
+## ADR-009 — Preferências locais
 
-## ADR-009 — Backup de preferências
+A fonte, o alto contraste e a leitura de voz são preferências locais e agora são persistidas em SharedPreferences.
 
-**Decisão:** não fazer backup automático das SharedPreferences do aplicativo.
+## ADR-010 — Dono explícito dos alarmes
 
-**Motivo:** as preferências podem conter identificadores e dados relacionados à sessão.
+O agendamento do lembrete leva o `idosoId` junto ao PendingIntent.
 
-## Pendências
+**Motivo:** a tela de alarme precisa saber qual registro remoto deve ser atualizado quando o usuário concluir o lembrete.
+
+## ADR-011 — Evitar listeners duplicados no serviço
+
+`AlertaBackgroundService` não deve registrar o mesmo conjunto de listeners novamente quando `onStartCommand` for chamado mais de uma vez.
+
+## Pendências arquiteturais
 
 - Security Rules por UID;
 - vínculo Responsável ↔ Idoso;
 - autorização de Cuidador;
-- estratégia segura para autenticação do Idoso;
-- remoção do PIN do banco;
-- política de retenção de localização;
-- auditoria de acessos.
+- autenticação segura do Idoso;
+- remoção do PIN;
+- remoção de `idoso_teste`;
+- retenção da localização;
+- auditoria de acesso.
