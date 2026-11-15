@@ -1,4 +1,4 @@
-`# 06 — Roadmap
+# 06 — Roadmap
 
 ## Fase 0 — Base
 
@@ -11,6 +11,7 @@
 
 - [x] Login
 - [x] Cadastro
+- [x] Onboarding Compose
 - [x] Contatos
 - [x] Configurações
 - [x] Treinamento
@@ -23,48 +24,48 @@
 - [x] Login com Google
 - [x] Firebase Realtime Database
 - [x] GPS
-- [x] Google Maps inicial
-- [x] Integração de lembretes e emergências
-- [x] Sincronização da localização com caminho padronizado
-- [x] Documentação do modelo de dados Firebase
+- [x] Google Maps
+- [x] Lembretes e alarmes locais
+- [x] Emergência em tempo real
+- [x] Localização padronizada em §localizacoes/{id}§
+- [x] Perfil migrado para Realtime Database
+- [x] Alarmes associados ao §idosoId§
 
 ## Fase 3 — Segurança
 
-- [x] Remover chave real do fallback versionado
-- [x] Proteger arquivos locais de credenciais no Git
-- [x] Não armazenar PIN do idoso em SharedPreferences
-- [x] Impedir backup automático das SharedPreferences
-- [x] Limitar logs de coordenadas ao debug
-- [x] Usar UID autenticado para localização em produção
-- [x] Evitar escrita com identificador artificial para usuário não autenticado
-- [ ] Revogar/rotacionar chave do Maps exposta no histórico
-- [ ] Definir Security Rules do Realtime Database
-- [ ] Restringir leituras/escritas por auth.uid
-- [ ] Criar vínculo Responsável ↔ Idoso por UID
-- [ ] Criar autorização específica do Cuidador
-- [ ] Substituir autenticação por PIN consultado diretamente no banco
-- [ ] Retirar PIN do documento do usuário
-- [ ] Remover `idoso_teste` do fluxo final
-- [ ] Revisar todo acesso por `idosoId`
-- [ ] Testar acesso cruzado entre contas
+- [x] Segredo do Maps fora de §local.defaults.properties§
+- [x] §.gitignore§ reforçado
+- [x] PIN não é salvo em SharedPreferences
+- [x] SharedPreferences excluído de backup
+- [x] Logs detalhados de coordenadas limitados ao debug
+- [x] Escrita com UID autenticado na localização
+- [ ] Rotacionar chave do Maps exposta no histórico
+- [ ] Definir Security Rules
+- [ ] Vínculo Responsável → Idoso por UID
+- [ ] Vínculo Cuidador → Idoso por UID
+- [ ] Autenticação definitiva do Idoso
+- [ ] Remover PIN remoto
+- [ ] Remover §idoso_teste§
+- [ ] Testar acesso cruzado
 
 ## Fase 4 — Qualidade
 
-- [ ] Testes unitários para regras de negócio
+- [ ] Testes unitários de regras de negócio
 - [ ] Testes instrumentados
-- [ ] Testes em aparelho físico
+- [ ] Testes no aparelho físico
 - [ ] Testes offline/online
 - [ ] Testes de permissões
+- [ ] Testes de lembretes
 - [ ] Testes de emergência
 - [ ] Testes de localização
-- [ ] Teste de rotação de tela
-- [ ] Teste de encerramento e retomada do aplicativo
+- [ ] Testes de acessibilidade
 
 ## Fase 5 — Entrega
 
-- [ ] README final
 - [ ] Manual do idoso
 - [ ] Manual do responsável
+- [ ] Manual do cuidador
 - [ ] Manual técnico
 - [ ] APK de demonstração
 - [ ] Checklist final
+- [ ] Preparação para loja
