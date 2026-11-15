@@ -1,19 +1,20 @@
-# 10 — Backlog atual
+`# 10 — Backlog atual
 
-## P0 — necessário para o MVP
+## P0 — estabilidade e MVP
 
-- [ ] Consolidar Login
-- [ ] Consolidar Cadastro
-- [ ] Criar tela de boas-vindas pós-cadastro/login
-- [ ] Criar Adicionar Lembrete
-- [ ] Criar Contatos de Confiança
-- [ ] Criar Configurações
-- [ ] Persistir Perfil
-- [ ] Persistir Lembretes
-- [ ] Solicitar e tratar permissão de localização
-- [ ] Permitir ligação rápida
-- [ ] Tratar estado sem contato de confiança
-- [ ] Tratar erros e permissões
+- [x] Consolidar Login
+- [x] Consolidar Cadastro
+- [x] Criar tela de boas-vindas/onboarding
+- [x] Criar Adicionar Lembrete
+- [x] Criar Contatos de Confiança
+- [x] Criar Configurações
+- [x] Persistência inicial de perfil
+- [x] Persistência de lembretes
+- [x] Solicitar e tratar permissão de localização
+- [x] Fluxo básico de emergência
+- [ ] Persistência definitiva do perfil do Idoso sem fallback de debug
+- [ ] Tratar completamente estado sem contato de confiança
+- [ ] Testes automatizados dos fluxos críticos
 
 ## P1 — segurança e acessibilidade
 
@@ -22,18 +23,22 @@
 - [ ] Áreas de toque maiores
 - [ ] Confirmação de ações críticas
 - [ ] Privacidade e consentimento de localização
-- [ ] Não armazenar senha em texto puro
+- [ ] Security Rules do Realtime Database
+- [ ] Vínculo Responsável → Idoso por UID
+- [ ] Vínculo Cuidador → Idoso por UID
+- [ ] Teste de acesso cruzado entre contas
+- [ ] Remover PIN do documento remoto
+- [ ] Autenticação definitiva do Idoso
 
-## P2 — versão conectada
+## P2 — versão conectada consolidada
 
-- [ ] Backend
-- [ ] Banco remoto
-- [ ] Login real
-- [ ] Perfil do responsável
-- [ ] Vincular responsável ao idoso
-- [ ] Localização remota
-- [ ] Sincronização de lembretes
-- [ ] Alertas remotos
+- [x] Firebase Authentication para contas de Responsável/Cuidador
+- [x] Firebase Realtime Database
+- [x] Localização remota
+- [x] Sincronização inicial de lembretes
+- [x] Alertas remotos
+- [ ] Política de retenção para localização
+- [ ] Auditoria de acesso aos dados sensíveis
 
 ## P3 — produto avançado
 
@@ -43,9 +48,3 @@
 - [ ] Logs de segurança
 - [ ] Telemetria de erros
 - [ ] Publicação em loja
-
-## Regra de prioridade
-
-P0 antes de P1.  
-P1 antes de P2.  
-P2 somente depois de a experiência local estar validada no dispositivo.
