@@ -1,50 +1,62 @@
-`# 10 — Backlog atual
+# 10 — Backlog atual
 
-## P0 — estabilidade e MVP
+## P0 — estabilidade
 
 - [x] Consolidar Login
 - [x] Consolidar Cadastro
-- [x] Criar tela de boas-vindas/onboarding
-- [x] Criar Adicionar Lembrete
-- [x] Criar Contatos de Confiança
+- [x] Onboarding Compose
+- [x] Criar Contatos
 - [x] Criar Configurações
-- [x] Persistência inicial de perfil
+- [x] Persistência inicial do perfil
 - [x] Persistência de lembretes
-- [x] Solicitar e tratar permissão de localização
+- [x] Permissão de localização
 - [x] Fluxo básico de emergência
-- [ ] Persistência definitiva do perfil do Idoso sem fallback de debug
-- [ ] Tratar completamente estado sem contato de confiança
 - [ ] Testes automatizados dos fluxos críticos
+- [ ] Edição completa de lembretes
+- [ ] Repetição configurável dos lembretes
 
-## P1 — segurança e acessibilidade
+## P1 — segurança
 
-- [ ] Fonte maior
-- [ ] Contraste revisado
-- [ ] Áreas de toque maiores
-- [ ] Confirmação de ações críticas
-- [ ] Privacidade e consentimento de localização
 - [ ] Security Rules do Realtime Database
 - [ ] Vínculo Responsável → Idoso por UID
 - [ ] Vínculo Cuidador → Idoso por UID
-- [ ] Teste de acesso cruzado entre contas
-- [ ] Remover PIN do documento remoto
 - [ ] Autenticação definitiva do Idoso
-
-## P2 — versão conectada consolidada
-
-- [x] Firebase Authentication para contas de Responsável/Cuidador
-- [x] Firebase Realtime Database
-- [x] Localização remota
-- [x] Sincronização inicial de lembretes
-- [x] Alertas remotos
-- [ ] Política de retenção para localização
+- [ ] Remover PIN remoto
+- [ ] Remover `idoso_teste`
+- [ ] Testar acesso cruzado
+- [ ] Rotacionar chave do Maps exposta no histórico
+- [ ] Definir retenção de localização
 - [ ] Auditoria de acesso aos dados sensíveis
 
-## P3 — produto avançado
+## P1 — acessibilidade
 
-- [ ] Treinamento personalizado por modelo de aparelho
+- [x] Escala de fonte
+- [x] Alto contraste
+- [x] Persistência das preferências
+- [ ] Completar leitura por voz nas funções críticas
+- [ ] Teste formal de acessibilidade no aparelho
+- [ ] Revisão de tamanhos de toque
+
+## P2 — qualidade
+
+- [ ] Testes unitários
+- [ ] Testes instrumentados
+- [ ] Testes offline/online
+- [ ] Testes de permissões
+- [ ] Testes de localização
+- [ ] Testes de lembretes
+- [ ] Testes de emergência
+- [ ] Testes de acesso cruzado
+
+## P3 — produto
+
+- [ ] Treinamento avançado do idoso
 - [ ] Central de ajuda
-- [ ] Histórico de localização com política de retenção
+- [ ] Histórico de localização com retenção definida
 - [ ] Logs de segurança
 - [ ] Telemetria de erros
 - [ ] Publicação em loja
+
+## Regra de prioridade
+
+Segurança crítica → estabilidade → acessibilidade → funcionalidades novas → refinamento.
