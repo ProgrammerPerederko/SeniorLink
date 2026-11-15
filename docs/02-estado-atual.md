@@ -1,28 +1,31 @@
-# 02 — Estado atual
+`# 02 — Estado atual
 
-> Revisão da base do repositório em 15/11/2026.
+> Revisão da base do repositório e das integrações em 15/11/2026.
 
-## Estrutura atual
+## 1. Plataforma
 
-Aplicativo Android em Kotlin + Jetpack Compose, com uma `MainActivity` centralizando o fluxo atual e Activities/layouts XML legados ainda presentes no projeto.
+O SeniorLink é um aplicativo Android em Kotlin + Jetpack Compose.
 
-## Configuração
+A `MainActivity` concentra a navegação atual e ainda existem Activities/recursos XML específicos para alarmes e compatibilidade.
 
-- namespace/applicationId: `com.seniorlink.app`
-- minSdk: 24
-- targetSdk: 37
-- compileSdk: 37
-- Kotlin: 2.4.21
-- Android Gradle Plugin: 9.3.1
-- Gradle: 9.6.0
-- Compose BOM: 2026.02.01
-- Java/JVM: 17
+### Configuração atual
 
-## Integrações
+| Item | Valor |
+|---|---|
+| namespace | `com.seniorlink.app` |
+| applicationId | `com.seniorlink.app` |
+| minSdk | 24 |
+| compileSdk | 37 |
+| targetSdk | 37 |
+| Kotlin | 2.4.21 |
+| Android Gradle Plugin | 9.3.1 |
+| Gradle | 9.6.0 |
+| Compose BOM | 2026.02.01 |
+| Java/JVM | 17 |
 
-### Firebase Authentication
+## 2. Autenticação
 
-O projeto possui:
+O Firebase Authentication está integrado para:
 
 - login por e-mail e senha;
 - cadastro por e-mail e senha;
@@ -30,47 +33,109 @@ O projeto possui:
 - login com Google;
 - logout.
 
-### Realtime Database
+### Exceção atual: Idoso
 
-O projeto utiliza o Realtime Database para usuários, lembretes, contatos, ranking, localização e emergências.
+O Idoso ainda utiliza um PIN de quatro dígitos consultado no Realtime Database.
 
-### Localização
+Esse fluxo funciona como compatibilidade com o protótipo atual, mas **não representa a autenticação definitiva**.
+
+## 3. Realtime Database
+
+O Realtime Database é usado para:
+
+- perfis;
+- vínculo atual do responsável com idosos;
+- lembretes;
+- contatos;
+- ranking;
+- localização;
+- emergências.
+
+O modelo completo está documentado em [11 — Modelo do Firebase](11-modelo-firebase.md).
+
+## 4. Localização
 
 `LocationRepository` usa `FusedLocationProviderClient`.
 
-Em debug, o projeto ainda possui o caminho de teste `localizacoes/idoso_teste` para preservar os testes atuais.
+### Produção
 
-Em build de produção, a localização só é persistida quando existe um usuário autenticado, usando o UID como identificador.
+Quando existe sessão Firebase autenticada:
 
-### Google Maps
+`@text
+localizacoes/{auth.uid}
+`@
 
-A tela de localização utiliza Google Maps Compose com marcador e atualização de câmera.
+### Debug
 
-## Correções de segurança aplicadas nesta revisão
+Quando o fluxo atual do idoso ainda não possui Firebase Authentication, o aplicativo pode usar o `id_idoso` salvo em `SharedPreferences` para testar o caminho:
 
-- chave real removida de `local.defaults.properties`;
-- proteção adicional para arquivos de credenciais no `.gitignore`;
-- PIN removido do armazenamento em `SharedPreferences`;
-- backup automático de `SharedPreferences` desabilitado;
-- logs detalhados de coordenadas limitados ao modo debug;
-- gravação diagnóstica do Firebase limitada ao modo debug;
-- localização de produção vinculada ao UID autenticado.
+`@text
+localizacoes/{id_idoso}
+`@
 
-## Pendências de segurança
+Se não existir esse identificador, o fallback é:
 
-Ainda são necessárias:
+`@text
+localizacoes/idoso_teste
+`@
 
-1. rotação da chave do Maps exposta no histórico;
-2. Security Rules do Realtime Database por `auth.uid`;
-3. modelo de vínculo Responsável ↔ Idoso;
-4. autorização específica do Cuidador;
-5. substituição do login do idoso por PIN consultável diretamente no banco;
-6. remoção do PIN armazenado no próprio registro do usuário;
-7. remoção definitiva de `idoso_teste` quando o fluxo autenticado estiver concluído;
-8. revisão de todos os acessos que recebem `idosoId` da UI;
-9. revisão de backup e permissões para a versão final;
-10. testes de acesso entre contas.
+Esse fallback é exclusivo para debug.
 
-## Regra
+## 5. Google Maps
 
-Interface não é autorização. A decisão final de acesso deve estar nas regras do backend.
+A tela de localização utiliza Google Maps Compose e apresenta:
+
+- marcador da posição atual;
+- atualização de câmera;
+- controles de zoom;
+- leitura de precisão;
+- status de rastreamento.
+
+A chave real deve ficar em `secrets.properties`.
+
+## 6. Emergência
+
+O fluxo de emergência registra o evento em:
+
+`@text
+emergencias/{idosoId}
+`@
+
+e também mantém um espelho em:
+
+`@text
+usuarios/{idosoId}/emergencia_ativa
+`@
+
+A localização usada pelo painel é padronizada em:
+
+`@text
+localizacoes/{idosoId}
+`@
+
+## 7. Correções aplicadas nesta revisão
+
+- corrigida a referência a um campo `pin` que havia sido removido do modelo de perfil;
+- corrigido o caminho de leitura da localização do painel do responsável;
+- corrigido o caminho da localização usado pelo fluxo de emergência;
+- evitado o uso do identificador artificial `__unauthenticated__` nas gravações do repositório;
+- consulta de idosos do responsável filtrada no Realtime Database pelo e-mail autenticado;
+- validações adicionais para operações que exigem sessão autenticada;
+- documentação do modelo Firebase criada e vinculada ao projeto.
+
+## 8. Segurança ainda pendente
+
+1. revogar/rotacionar a chave do Maps exposta no histórico;
+2. revisar e versionar as Security Rules;
+3. criar vínculo Responsável → Idoso por UID;
+4. criar vínculo Cuidador → Idoso por UID;
+5. retirar o PIN do documento remoto;
+6. substituir o login do idoso por autenticação apropriada;
+7. remover `idoso_teste`;
+8. revisar todos os acessos que recebem `idosoId` da UI;
+9. executar testes reais de acesso cruzado;
+10. definir retenção de dados de localização.
+
+## Regra de segurança
+
+A tela, a rota da `MainActivity`, o e-mail recebido pela UI e o `idosoId` não substituem as Security Rules.
