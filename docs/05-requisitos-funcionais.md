@@ -2,87 +2,129 @@
 
 ## RF01 — Localização
 
-O sistema deve permitir obter a localização do idoso com GPS e, na versão conectada, disponibilizá-la ao responsável autorizado.
+**Estado:** parcialmente implementado.
+
+O aplicativo captura GPS, publica a localização no Realtime Database e exibe a posição em mapa.
+
+Pendências: autorização por vínculo, política de retenção e testes de acesso cruzado.
 
 ## RF02 — Ficha do idoso
 
-O sistema deve armazenar informações que possam auxiliar em acidentes:
+**Estado:** implementado na camada atual.
+
+O perfil pode armazenar:
 
 - nome;
-- data de nascimento;
+- idade;
 - tipo sanguíneo;
 - alergias;
+- condições médicas;
 - medicamentos;
-- condições importantes;
-- contatos de confiança.
+- endereço;
+- telefone de emergência.
+
+Pendência: proteção final pelas Security Rules.
 
 ## RF03 — Lembretes
 
-O usuário deve poder:
+**Estado:** parcialmente implementado.
 
-- criar;
-- editar;
-- ativar/desativar;
-- excluir;
-- definir data;
-- definir horário;
-- definir repetição;
-- receber notificação.
+Existe:
+
+- criação;
+- leitura;
+- conclusão;
+- exclusão;
+- agendamento local;
+- tela de alarme;
+- adiamento de cinco minutos.
+
+Pendências de produto:
+
+- edição;
+- repetição configurável;
+- sincronização mais completa;
+- testes instrumentados.
 
 ## RF04 — Emergência
 
-O sistema deve permitir acionar rapidamente uma rotina de emergência e acesso a um contato de confiança.
+**Estado:** parcialmente implementado.
+
+Existe:
+
+- confirmação;
+- gravação no Realtime Database;
+- localização;
+- painel do responsável;
+- monitoramento em segundo plano;
+- tela de alerta.
+
+Pendência: autorização final por vínculo e testes em cenário real.
 
 ## RF05 — Ligação rápida
 
-O usuário deve conseguir iniciar uma ligação para um contato cadastrado com poucos toques.
+**Estado:** implementado na interface atual.
+
+Os contatos usam o discador do Android.
 
 ## RF06 — Contatos de confiança
 
-O responsável deve poder cadastrar pessoas autorizadas, com nome e telefone.
+**Estado:** parcialmente implementado.
+
+Existe criação, leitura, exclusão e ligação.
+
+Pendência: autorização por vínculo do responsável/cuidador.
 
 ## RF07 — Treinamento do idoso
 
-O sistema deve apresentar tutoriais simples sobre:
+**Estado:** interface inicial.
 
-- funções básicas do celular;
-- chamadas;
-- mensagens;
-- WhatsApp;
-- recursos do SeniorLink;
-- segurança digital básica.
+Existem tutoriais básicos; o conteúdo será expandido.
 
 ## RF08 — Treinamento do responsável
 
-O sistema deve explicar:
+**Estado:** interface inicial.
 
-- como acompanhar o idoso;
-- como interpretar localização;
-- como acessar a ficha;
-- como lidar com lembretes;
-- como utilizar a emergência;
-- como resolver problemas básicos.
+Existe uma sequência de orientações básicas.
 
 ## RF09 — Perfil
 
-Alterações no perfil devem persistir no aparelho na primeira fase.
+**Estado:** implementado na camada atual.
+
+O perfil remoto utiliza Realtime Database e as preferências locais são persistidas em SharedPreferences.
 
 ## RF10 — Acessibilidade
 
-O sistema deve oferecer textos legíveis, alto contraste, elementos grandes e opção de aumentar a fonte.
+**Estado:** parcialmente implementado.
+
+Existe:
+
+- escala de fonte;
+- alto contraste;
+- opção de leitura em voz alta.
+
+A persistência das preferências foi corrigida nesta revisão.
+
+Pendência: completar o uso da leitura de voz nas funções críticas e realizar teste de acessibilidade no aparelho.
 
 ## RNF01 — Usabilidade
 
-O fluxo deve ser compreensível para um usuário com pouca familiaridade tecnológica.
+**Estado:** em validação.
 
 ## RNF02 — Privacidade
 
-Localização e dados de saúde devem possuir controle de acesso.
+**Estado:** pendente de conclusão.
+
+A implementação cliente possui medidas de segurança, mas as Security Rules e os vínculos de acesso ainda precisam ser concluídos.
 
 ## RNF03 — Confiabilidade
 
-Funções críticas devem tratar indisponibilidade de GPS, permissões negadas e ausência de contato cadastrado.
+**Estado:** parcialmente implementado.
+
+Permissões e erros básicos possuem tratamento, mas ainda faltam testes instrumentados e testes offline/online.
 
 ## RNF04 — Desempenho
 
-A interface principal deve abrir rapidamente e sem bloqueios perceptíveis durante a navegação.
+**Estado:** em validação.
+
+A interface principal não deve bloquear durante operações de rede.
