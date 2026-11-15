@@ -61,23 +61,23 @@ O modelo completo está documentado em [11 — Modelo do Firebase](11-modelo-fir
 
 Quando existe sessão Firebase autenticada:
 
-`@text
+```text
 localizacoes/{auth.uid}
-`@
+```
 
 ### Debug
 
 Quando o fluxo atual do idoso ainda não possui Firebase Authentication, o aplicativo pode usar o `id_idoso` salvo em `SharedPreferences` para testar o caminho:
 
-`@text
+```text
 localizacoes/{id_idoso}
-`@
+```
 
 Se não existir esse identificador, o fallback é:
 
-`@text
+```text
 localizacoes/idoso_teste
-`@
+```
 
 Esse fallback é exclusivo para debug.
 
@@ -97,21 +97,21 @@ A chave real deve ficar em `secrets.properties`.
 
 O fluxo de emergência registra o evento em:
 
-`@text
+```text
 emergencias/{idosoId}
-`@
+```
 
 e também mantém um espelho em:
 
-`@text
+```text
 usuarios/{idosoId}/emergencia_ativa
-`@
+```
 
 A localização usada pelo painel é padronizada em:
 
-`@text
+```text
 localizacoes/{idosoId}
-`@
+```
 
 ## 7. Correções aplicadas nesta revisão
 
