@@ -1,22 +1,20 @@
-`# 03 — Arquitetura
+# 03 — Arquitetura
 
-## Visão atual
+## Visão
 
-O SeniorLink usa uma arquitetura simples em camadas, ainda em evolução:
+O projeto segue uma arquitetura simples por camadas:
 
 ```text
 Compose UI
    ↓
-ViewModel / estado da tela
+estado da tela / ViewModel
    ↓
 Repository
    ↓
-Firebase / serviços do Android
+Firebase / serviços Android
 ```
 
-O objetivo é manter a UI sem conhecimento desnecessário dos detalhes do Firebase e do provedor de localização.
-
-## Estrutura principal
+## Estrutura
 
 ```text
 app/src/main/java/com/seniorlink/app/
@@ -37,114 +35,92 @@ app/src/main/java/com/seniorlink/app/
     └── theme/
 ```
 
+> `FirestoreRepository.kt` é um nome histórico. A implementação usa Realtime Database.
+
+## Navegação
+
+`MainActivity` controla as rotas por estado.
+
+O fluxo inicial é:
+
+```text
+MainActivity
+   ↓
+SplashScreen / onboarding Compose
+   ↓
+Login
+   ↓
+Cadastro ou Home
+```
+
+O launcher não usa `SplashActivity` nem `OnboardingActivity`.
+
 ## Autenticação
 
-`AuthRepository` é a camada de acesso ao Firebase Authentication.
+`AuthRepository` concentra Firebase Authentication.
 
-Responsabilidades:
+`AuthViewModel` expõe o estado das operações para Compose.
 
-- login por e-mail/senha;
-- cadastro;
-- Google Sign-In;
-- recuperação de senha;
-- logout.
+A seleção de perfil na UI define o fluxo de navegação, mas não é autorização de backend.
 
-`AuthViewModel` expõe o estado de carregamento e mensagens de erro para a UI.
+## Dados
 
-### Limitação atual
+O banco operacional é Firebase Realtime Database.
 
-A seleção visual de perfil ocorre na UI.
+Principais áreas:
 
-Ela define o fluxo de navegação, mas **não é autorização**.
+- `usuarios`;
+- `localizacoes`;
+- `emergencias`;
+- `ranking_idosos`;
+- `diagnostico`.
 
-O backend deve validar a identidade e o relacionamento do usuário.
+O contrato está em [13 — Modelo do Firebase](13-modelo-firebase.md).
 
-## Realtime Database
+## Perfil
 
-O arquivo `data/FirestoreRepository.kt` possui nome histórico, mas usa exclusivamente Firebase Realtime Database.
+`model/IdosoState.kt` usa Realtime Database para o perfil e SharedPreferences para preferências locais.
 
-Principais responsabilidades:
-
-- consultas de idosos;
-- atualização de ficha;
-- lembretes;
-- contatos;
-- ranking;
-- emergências.
-
-A estrutura dos nós está em [11 — Modelo do Firebase](11-modelo-firebase.md).
+O perfil remoto mantém o registro existente e usa `updateChildren`, preservando campos como vínculo e PIN legado.
 
 ## Localização
 
-`LocationRepository` concentra:
+`LocationRepository` é a única camada responsável por publicar localização.
 
-- `FusedLocationProviderClient`;
-- atualização periódica;
-- última posição disponível;
-- publicação no Realtime Database;
-- diagnóstico de debug.
-
-### Regra de identidade
-
-Em produção, a referência é:
+Em produção:
 
 ```text
 localizacoes/{auth.uid}
 ```
 
-No debug, o código atual aceita o `id_idoso` salvo localmente para manter o fluxo de teste por PIN funcionando.
-
-Essa compatibilidade deve desaparecer quando o Idoso passar a possuir uma identidade Firebase própria.
-
-## Localização do Responsável
-
-O painel do responsável lê diretamente:
+Em debug do fluxo legado:
 
 ```text
-localizacoes/{idosoId}
+localizacoes/{id_idoso}
 ```
 
-Isso corrige a divergência anterior em que o produtor gravava em `localizacoes` enquanto a tela tentava ler em `usuarios/{id}/localizacao`.
+ou, apenas como fallback:
+
+```text
+localizacoes/idoso_teste
+```
+
+## Lembretes
+
+`LembreteScheduler` cria o PendingIntent do lembrete e agora transporta também o `idosoId`.
+
+`AlarmeDisparoActivity` usa esse identificador para concluir o lembrete no registro correto.
 
 ## Emergência
 
-O evento de emergência usa:
+`AlertaBackgroundService` monitora os registros autorizados de emergência.
 
-```text
-emergencias/{idosoId}
-usuarios/{idosoId}/emergencia_ativa
-```
-
-A localização continua centralizada em:
-
-```text
-localizacoes/{idosoId}
-```
+O serviço possui proteção para não registrar listeners novamente quando `onStartCommand` for chamado múltiplas vezes.
 
 ## Segurança
 
-A autorização deve ser imposta no Firebase Realtime Database Rules.
+A autorização final deve ser feita no Firebase Security Rules.
 
-Modelo esperado:
+O Android não deve ser tratado como fonte definitiva de autorização.
 
-```text
-auth.uid
-   ↓
-perfil autenticado
-   ↓
-vínculo autorizado
-   ↓
-idoso
-   ├── localização
-   ├── lembretes
-   ├── contatos
-   └── emergências
-```
-
-Nunca confiar exclusivamente em:
-
-- botão da UI;
-- rota;
-- e-mail enviado pelo cliente;
-- `idosoId` enviado pela tela;
-- campo de perfil escolhido localmente.
+`idosoId`, e-mail e perfil selecionado pela UI são identificadores de fluxo até que o vínculo por UID seja implementado no backend.
