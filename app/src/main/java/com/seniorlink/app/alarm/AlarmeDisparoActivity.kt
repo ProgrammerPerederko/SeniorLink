@@ -44,6 +44,7 @@ class AlarmeDisparoActivity : ComponentActivity() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var lembreteId: String = ""
+    private var idosoId: String = ""
     private var autoCloseJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,6 +68,7 @@ class AlarmeDisparoActivity : ComponentActivity() {
         })
 
         lembreteId = intent.getStringExtra("ID") ?: ""
+        idosoId = intent.getStringExtra("IDOSO_ID") ?: ""
         val titulo = intent.getStringExtra("TITULO") ?: "Hora do seu compromisso!"
         val categoria = intent.getStringExtra("CATEGORIA") ?: "Lembrete"
         val horario = intent.getStringExtra("HORARIO") ?: ""
@@ -141,7 +143,15 @@ class AlarmeDisparoActivity : ComponentActivity() {
             val repo = FirestoreRepository()
             lifecycleScope.launch {
                 try {
+                    if (idosoId.isNotBlank()) {
+                    repo.alternarConcluidoLembretePorIdoso(
+                        idosoId = idosoId,
+                        lembreteId = lembreteId,
+                        concluidoAtual = false
+                    )
+                } else {
                     repo.alternarConcluidoLembrete(lembreteId, false)
+                }
                 } catch (_: Exception) {
                 } finally {
                     finishAndRemoveTask()
