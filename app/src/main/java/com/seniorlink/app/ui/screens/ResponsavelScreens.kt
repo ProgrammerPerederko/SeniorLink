@@ -261,7 +261,7 @@ fun PainelResponsavelScreen(
                                     Button(
                                         onClick = {
                                             val id = idosoEmEmergencia.id
-                                            FirebaseDatabase.getInstance().getReference("usuarios").child(id).child("localizacao")
+                                            FirebaseDatabase.getInstance().getReference("localizacoes").child(id)
                                                 .addListenerForSingleValueEvent(object : ValueEventListener {
                                                     override fun onDataChange(snapshot: DataSnapshot) {
                                                         val lat = snapshot.child("latitude").getValue(Double::class.java) ?: 0.0
@@ -464,7 +464,7 @@ fun PainelResponsavelScreen(
                                     )
                                     Spacer(modifier = Modifier.height(3.dp))
                                     Text(
-                                        text = if (idosoAtual != null) "PIN Exclusivo: ${idosoAtual.pin} | Idade: ${idosoAtual.idade.ifBlank { "Não inf." }}" else "Cadastre um idoso para começar",
+                                        text = if (idosoAtual != null) "Acesso do idoso configurado | Idade: ${idosoAtual.idade.ifBlank { "Não informada" }}" else "Cadastre um idoso para começar",
                                         fontSize = 12.sp,
                                         color = VerdeMarca,
                                         fontWeight = FontWeight.SemiBold
@@ -745,7 +745,6 @@ private fun TelaCadastroBasicoIdoso(
                                         val recemCriado = PerfilVinculadoFirestore(
                                             id = novoId,
                                             nome = nomeNovo,
-                                            pin = pinNovo,
                                             email = authEmail,
                                             tipo = "idoso",
                                             cadastroCompleto = false
