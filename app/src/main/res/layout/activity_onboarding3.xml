@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <!-- BLOCO CENTRAL DA PÁGINA -->
+    <LinearLayout
+        android:id="@+id/conteudoCentral"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.47">
+
+        <!-- ILUSTRAÇÃO -->
+        <ImageView
+            android:id="@+id/imgIlustracao"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="Ilustração de localização do idoso"
+            android:scaleType="fitCenter"
+            android:src="@drawable/onboarding_localizacao" />
+
+        <!-- ESPAÇO ENTRE IMAGEM E TÍTULO -->
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="18dp" />
+
+        <!-- TÍTULO -->
+        <TextView
+            android:id="@+id/txtTitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Sempre por perto"
+            android:textColor="#123B63"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <!-- ESPAÇO -->
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="12dp" />
+
+        <!-- DESCRIÇÃO -->
+        <TextView
+            android:id="@+id/txtDescricao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:text="Acompanhe a localização e mantenha quem você ama conectado com mais tranquilidade."
+            android:textColor="#526579"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <!-- INDICADORES INTERNOS DA TELA -->
+    <!-- O Adapter os esconde. -->
+    <LinearLayout
+        android:id="@+id/indicadores"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="38dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="visible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <View
+            android:layout_width="5dp"
+            android:layout_height="5dp"
+            android:layout_margin="3dp"
+            android:background="#B9D9E1" />
+
+        <View
+            android:layout_width="5dp"
+            android:layout_height="5dp"
+            android:layout_margin="3dp"
+            android:background="#B9D9E1" />
+
+        <View
+            android:layout_width="6dp"
+            android:layout_height="6dp"
+            android:layout_margin="3dp"
+            android:background="#159C8C" />
+
+    </LinearLayout>
+
+    <!-- CONTROLES ANTIGOS -->
+    <!-- Ficam escondidos pelo Adapter -->
+
+    <TextView
+        android:id="@+id/txtPular"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnAvancar"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
