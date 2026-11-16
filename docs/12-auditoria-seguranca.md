@@ -17,7 +17,7 @@ Esta auditoria registra tanto correções já aplicadas quanto riscos que depend
 - `.gitignore` cobre credenciais e certificados;
 - a chave que foi encontrada no histórico foi removida das referências de branch do repositório;
 - o valor real não é mantido no estado atual do repositório;
-- a revogação/rotação no Google Cloud ainda precisa ser concluída fora do GitHub.
+- a chave antiga exposta foi excluída no Google Cloud;
 
 ### Perfil e banco
 
@@ -64,7 +64,7 @@ Esta auditoria registra tanto correções já aplicadas quanto riscos que depend
 5. O PIN remoto ainda é utilizado no login do Idoso.
 6. `idoso_teste` ainda existe para debug.
 7. Operações por `idosoId` dependem das regras do servidor.
-8. A antiga chave do Maps encontrada no histórico precisa ser revogada/rotacionada no Google Cloud.
+8. A chave do Maps do aplicativo é fornecida por ambiente e não é versionada.
 9. A retenção de localização e emergência ainda não está definida.
 10. O acesso cruzado entre contas ainda precisa de teste formal.
 
@@ -72,7 +72,7 @@ Esta auditoria registra tanto correções já aplicadas quanto riscos que depend
 
 O SeniorLink não deve ser considerado pronto enquanto:
 
-- a antiga chave exposta for revogada/rotacionada no Google Cloud;
+- o ambiente de execução fornecer uma chave do Maps válida quando os mapas forem utilizados;
 - as Security Rules não limitarem leitura e escrita;
 - os vínculos não forem baseados em UID;
 - o PIN não tiver sido removido do modelo remoto;

@@ -8,7 +8,7 @@ O SeniorLink combina localização, ficha de informações importantes, lembrete
 
 ## Estado técnico atual
 
-A aplicação utiliza Kotlin + Jetpack Compose, Firebase Authentication, Firebase Realtime Database, Fused Location Provider e Google Maps Compose.
+A aplicação utiliza Kotlin + Jetpack Compose, Firebase Authentication, Firebase Realtime Database, Fused Location Provider e Google Maps Compose. A integração do Google Maps usa uma chave configurada localmente; nenhuma chave pessoal é mantida no repositório.
 
 O fluxo principal é controlado por `MainActivity` e `SplashScreen`. O projeto ainda contém algumas Activities/XML antigos de onboarding que não são usados pelo launcher atual; eles são mantidos como legado até uma limpeza dedicada.
 
@@ -48,7 +48,7 @@ O projeto precisa de:
 - JDK 17;
 - Android Studio compatível com compileSdk 37;
 - `app/google-services.json` do projeto Firebase;
-- `secrets.properties` local com a chave real do Maps.
+- `secrets.properties` local, somente quando o usuário quiser fornecer sua própria chave do Maps.
 
 `secrets.properties` não deve ser versionado.
 
@@ -58,7 +58,7 @@ O arquivo versionado `local.defaults.properties` contém somente:
 MAPS_API_KEY=DEFAULT_API_KEY
 ```
 
-Uma chave real do Maps apareceu anteriormente no histórico do Git e deve ser considerada exposta. Ela precisa ser revogada/rotacionada no Google Cloud.
+A chave antiga que apareceu no histórico foi removida das referências de branch e excluída no Google Cloud. O repositório atual mantém somente placeholders; cada ambiente pode fornecer sua própria chave localmente.
 
 ## Estrutura principal
 
