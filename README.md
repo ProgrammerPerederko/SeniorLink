@@ -1,89 +1,106 @@
 # SeniorLink
 
-Aplicativo Android voltado à segurança, autonomia e inclusão digital da pessoa idosa.
+> Aplicativo Android para a **segurança, autonomia e inclusão digital da pessoa idosa**, conectando o idoso, seus responsáveis e cuidadores.
 
-## Objetivo
+![Status](https://img.shields.io/badge/status-MVP-orange)
+![Plataforma](https://img.shields.io/badge/plataforma-Android-3DDC84)
+![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF)
 
-O SeniorLink combina localização, ficha de informações importantes, lembretes, emergência, ligações rápidas e treinamento para o idoso, responsável e cuidador.
+O SeniorLink reúne em um só lugar localização, ficha de informações importantes, lembretes, botão de emergência, ligações rápidas e treinamento para uso do celular.
 
-## Estado técnico atual
+## Sumário
 
-A aplicação utiliza Kotlin + Jetpack Compose, Firebase Authentication, Firebase Realtime Database, Fused Location Provider e Google Maps Compose. A integração do Google Maps usa uma chave configurada localmente; nenhuma chave pessoal é mantida no repositório.
+- [Funcionalidades](#funcionalidades)
+- [Perfis de uso](#perfis-de-uso)
+- [Tecnologias](#tecnologias)
+- [Documentação](#documentação)
+- [Como executar](#como-executar)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Como contribuir](#como-contribuir)
 
-O fluxo principal é controlado por `MainActivity` e `SplashScreen`. O projeto ainda contém algumas Activities/XML antigos de onboarding que não são usados pelo launcher atual; eles são mantidos como legado até uma limpeza dedicada.
+## Funcionalidades
 
-### Perfis atuais
+- **Localização** do idoso com Fused Location Provider e Google Maps.
+- **Ficha de informações importantes** (dados de saúde e contatos de confiança).
+- **Lembretes** com alarmes para medicações e compromissos.
+- **Emergência**: alerta com tela dedicada para acionamento rápido.
+- **Ligações rápidas** para contatos de confiança.
+- **Jogos e treinamento** para inclusão digital do idoso.
 
-- Idoso
-- Responsável
-- Cuidador
+> Algumas funcionalidades ainda estão em desenvolvimento. Consulte o [roadmap](docs/06-roadmap.md) e o [backlog atual](docs/10-backlog-atual.md).
 
-### Backend atual
+## Perfis de uso
 
-O banco operacional é **Firebase Realtime Database**.
+| Perfil | Descrição |
+|---|---|
+| **Idoso** | Usuário principal do app, com interface simplificada. |
+| **Responsável** | Acompanha a localização e as informações do idoso. |
+| **Cuidador** | Apoia o dia a dia do idoso com acesso às informações definidas pelo responsável. |
 
-O Firebase Cloud Firestore não participa mais do código atual e foi removido das dependências do aplicativo.
+## Tecnologias
+
+- **Kotlin** e **Jetpack Compose** para a interface.
+- **Firebase Authentication** para login.
+- **Firebase Realtime Database** como banco de dados operacional.
+- **Fused Location Provider** e **Google Maps Compose** para localização.
+
+> O Cloud Firestore não é mais usado. Ele foi removido das dependências do aplicativo.
 
 ## Documentação
 
-- [Visão do produto](docs/01-visao-produto.md)
-- [Estado atual](docs/02-estado-atual.md)
-- [Arquitetura](docs/03-arquitetura.md)
-- [Mapa de telas](docs/04-mapa-de-telas.md)
-- [Requisitos funcionais](docs/05-requisitos-funcionais.md)
-- [Roadmap](docs/06-roadmap.md)
-- [Plano de testes](docs/07-plano-de-testes.md)
-- [Decisões técnicas](docs/08-decisoes-tecnicas.md)
-- [Diário de desenvolvimento](docs/09-diario-de-desenvolvimento.md)
-- [Backlog atual](docs/10-backlog-atual.md)
-- [Entrega de interfaces — 07/10/2026](docs/11-entrega-interfaces-2026-10-07.md)
-- [Modelo do Firebase](docs/13-modelo-firebase.md)
-- [Auditoria de segurança](docs/12-auditoria-seguranca.md)
-- [Guia de commits e colaboração](docs/14-guia-commits.md)
+| Documento | Conteúdo |
+|---|---|
+| [Visão do produto](docs/01-visao-produto.md) | Problema, público e proposta de valor |
+| [Estado atual](docs/02-estado-atual.md) | O que já está implementado |
+| [Arquitetura](docs/03-arquitetura.md) | Organização técnica do app |
+| [Mapa de telas](docs/04-mapa-de-telas.md) | Fluxo entre as telas |
+| [Requisitos funcionais](docs/05-requisitos-funcionais.md) | O que o sistema deve fazer |
+| [Roadmap](docs/06-roadmap.md) | Próximas etapas |
+| [Plano de testes](docs/07-plano-de-testes.md) | Estratégia e casos de teste |
+| [Decisões técnicas](docs/08-decisoes-tecnicas.md) | Justificativas das escolhas técnicas |
+| [Diário de desenvolvimento](docs/09-diario-de-desenvolvimento.md) | Histórico de progresso |
+| [Backlog atual](docs/10-backlog-atual.md) | Tarefas pendentes |
+| [Entrega de interfaces (07/10/2026)](docs/11-entrega-interfaces-2026-10-07.md) | Entrega das telas |
+| [Auditoria de segurança](docs/12-auditoria-seguranca.md) | Revisão de segurança |
+| [Modelo do Firebase](docs/13-modelo-firebase.md) | Estrutura dos dados no Realtime Database |
+| [Guia de commits e colaboração](docs/14-guia-commits.md) | Padrões de commits e pull requests |
 
-## Configuração local
+## Como executar
 
-O projeto precisa de:
+### Pré-requisitos
 
-- JDK 17;
-- Android Studio compatível com compileSdk 37;
-- `app/google-services.json` do projeto Firebase;
-- `secrets.properties` local, somente quando o usuário quiser fornecer sua própria chave do Maps.
+- **JDK 17**
+- **Android Studio** compatível com `compileSdk 37`
+- Um projeto no **Firebase** com o arquivo `app/google-services.json`
 
-`secrets.properties` não deve ser versionado.
+### Passo a passo
 
-O arquivo versionado `local.defaults.properties` contém somente:
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/ProgrammerPerederko/SeniorLink.git
+   ```
+2. Coloque o arquivo `google-services.json` do seu projeto Firebase em `app/`.
+3. (Opcional) Crie um arquivo `secrets.properties` na raiz com a sua chave do Google Maps:
+   ```properties
+   MAPS_API_KEY=SUA_CHAVE_AQUI
+   ```
+   Sem essa chave, o mapa não será carregado. O arquivo `secrets.properties` **não deve ser versionado**.
+4. Abra o projeto no Android Studio e aguarde a sincronização do Gradle.
+5. Execute o app em um emulador ou dispositivo físico.
 
-```properties
-MAPS_API_KEY=DEFAULT_API_KEY
-```
+> O arquivo `local.defaults.properties` contém apenas um valor de exemplo. Nenhuma chave pessoal é mantida no repositório.
 
-A chave antiga que apareceu no histórico foi removida das referências de branch e excluída no Google Cloud. O repositório atual mantém somente placeholders; cada ambiente pode fornecer sua própria chave localmente.
-
-## Estrutura principal
+## Estrutura do projeto
 
 ```text
 app/src/main/java/com/seniorlink/app/
-├── MainActivity.kt
-├── auth/
-├── data/
-├── location/
-├── alarm/
-├── services/
-├── model/
-└── ui/
+├── MainActivity.kt   # Ponto de entrada e fluxo principal
+├── auth/             # Autenticação (AuthRepository, AuthViewModel)
+├── data/             # Acesso ao Firebase Realtime Database
+├── location/         # Localização do dispositivo
+├── alarm/            # Lembretes, alarmes e alertas de emergência
+├── services/         # Serviços em segundo plano
+├── model/            # Modelos de dados
+└── ui/               # Telas (screens), componentes e tema
 ```
 
-> `data/FirestoreRepository.kt` possui nome histórico, mas usa Firebase Realtime Database. A nomenclatura será corrigida em uma mudança dedicada para evitar alterações desnecessárias nesta revisão.
-
-## Regra de trabalho
-
-Toda alteração deve seguir:
-
-`entender → implementar → testar → documentar → commit → pull request`.
-
-Veja o [Guia de commits e colaboração](docs/14-guia-commits.md) antes de criar commits.
-
-## Repositório
-
-https://github.com/ProgrammerPerederko/SeniorLink
