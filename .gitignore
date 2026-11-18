@@ -2,7 +2,7 @@
 .gradle
 /local.properties
 /.idea/
-.DS_Store
+/.DS_Store
 /build
 /captures
 .externalNativeBuild
@@ -10,8 +10,10 @@
 local.properties
 /secrets.properties
 
-# Credenciais e certificados locais
+# Configuracoes locais do Firebase e credenciais
+**/google-services.json
 .env
+.env.*
 *.keystore
 *.jks
 *.p12
