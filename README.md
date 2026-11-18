@@ -64,6 +64,7 @@ O SeniorLink reúne em um só lugar localização, ficha de informações import
 | [Auditoria de segurança](docs/12-auditoria-seguranca.md) | Revisão de segurança |
 | [Modelo do Firebase](docs/13-modelo-firebase.md) | Estrutura dos dados no Realtime Database |
 | [Guia de commits e colaboração](docs/14-guia-commits.md) | Padrões de commits e pull requests |
+| [Organização das branches](docs/15-organizacao-branches.md) | Branch oficial, arquivos históricos e fluxo de contribuição |
 
 ## Como executar
 
