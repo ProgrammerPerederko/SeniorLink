@@ -71,7 +71,7 @@ O SeniorLink reúne em um só lugar localização, ficha de informações import
 
 - **JDK 17**
 - **Android Studio** compatível com `compileSdk 37`
-- Um projeto no **Firebase** com o arquivo `app/google-services.json`
+- Um projeto Firebase configurado para o aplicativo Android `com.seniorlink.app`
 
 ### Passo a passo
 
@@ -79,16 +79,17 @@ O SeniorLink reúne em um só lugar localização, ficha de informações import
    ```bash
    git clone https://github.com/ProgrammerPerederko/SeniorLink.git
    ```
-2. Coloque o arquivo `google-services.json` do seu projeto Firebase em `app/`.
-3. (Opcional) Crie um arquivo `secrets.properties` na raiz com a sua chave do Google Maps:
+2. Baixe o arquivo `google-services.json` nas configurações do seu aplicativo Android no Firebase Console.
+3. Coloque o arquivo localmente em `app/google-services.json`. Esse arquivo é ignorado pelo Git e não deve ser enviado ao repositório.
+4. (Opcional) Crie um arquivo `secrets.properties` na raiz com sua chave restrita do Google Maps:
    ```properties
    MAPS_API_KEY=SUA_CHAVE_AQUI
    ```
-   Sem essa chave, o mapa não será carregado. O arquivo `secrets.properties` **não deve ser versionado**.
-4. Abra o projeto no Android Studio e aguarde a sincronização do Gradle.
-5. Execute o app em um emulador ou dispositivo físico.
+   Sem essa chave, o mapa não será carregado. O arquivo `secrets.properties` também não deve ser versionado.
+5. Abra o projeto no Android Studio e aguarde a sincronização do Gradle.
+6. Execute o app em um emulador ou dispositivo físico.
 
-> O arquivo `local.defaults.properties` contém apenas um valor de exemplo. Nenhuma chave pessoal é mantida no repositório.
+> Os arquivos de configuração Firebase e as chaves locais são fornecidos por cada desenvolvedor no próprio ambiente. Não publique credenciais, tokens ou arquivos de configuração privados.
 
 ## Estrutura do projeto
 
@@ -103,4 +104,3 @@ app/src/main/java/com/seniorlink/app/
 ├── model/            # Modelos de dados
 └── ui/               # Telas (screens), componentes e tema
 ```
-
